@@ -11,12 +11,11 @@ contents: write
 jobs:
 test:
 runs-on: ubuntu-latest
-
-
 steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+- name: Checkout
+uses: actions/checkout@v4
 
+```
   - name: Install Requests
     run: pip install requests
 
@@ -40,4 +39,4 @@ steps:
         git commit -m "Update sent news history"
         git push
       fi
-
+```
