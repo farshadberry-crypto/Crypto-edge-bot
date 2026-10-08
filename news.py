@@ -4,30 +4,20 @@ import xml.etree.ElementTree as ET
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = "@cryptoedgeAlerts"
-
 RSS_URL = "https://www.coindesk.com/arc/outboundfeeds/rss/"
 
 response = requests.get(RSS_URL, timeout=15)
 response.raise_for_status()
-
 root = ET.fromstring(response.content)
 
 telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-count = 0
+items = root.findall(".//item")[:5]
+titles = [item.findtext("title", default="").strip() for item in items]
+titles = [title for title in titles if title]
 
-for item in root.findall(".//item")[:5]:
-title = item.findtext("title")
-
-```
-if not title:
-    continue
-
-title = title.strip()
-
-message = f"""⚡ CRYPTO EDGE
-```
-
+messages = [
+f"""⚡ CRYPTO EDGE
 ━━━━━━━━━━━━━━━━━━
 
 🚨 BREAKING CRYPTO NEWS
@@ -39,20 +29,18 @@ message = f"""⚡ CRYPTO EDGE
 📊 THE MARKET NEVER SLEEPS
 🎯 STAY AHEAD
 ⚡ DATA OVER HYPE"""
+for title in titles
+]
 
-```
-telegram_response = requests.post(
-    telegram_url,
-    data={
-        "chat_id": CHAT_ID,
-        "text": message
-    },
-    timeout=15
+results = [
+requests.post(
+telegram_url,
+data={"chat_id": CHAT_ID, "text": message},
+timeout=15
 )
+for message in messages
+]
 
-telegram_response.raise_for_status()
+[ result.raise_for_status() for result in results ]
 
-count += 1
-```
-
-print(f"{count} news posts sent successfully.")
+print(f"{len(results)} news posts sent successfully.")
