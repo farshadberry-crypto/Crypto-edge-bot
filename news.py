@@ -12,31 +12,33 @@ response.raise_for_status()
 
 root = ET.fromstring(response.content)
 
-news_items = []
+telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+count = 0
 
 for item in root.findall(".//item")[:5]:
     title = item.findtext("title")
-    link = item.findtext("link")
 
-    if title and link:
-        news_items.append(f"📰 {title}\n{link}")
+    if not title:
+        continue
 
-if news_items:
-    message = "🔥 CRYPTO NEWS\n\n" + "\n\n".join(news_items)
-else:
-    message = "⚠️ No fresh crypto news found."
+    message = f"""📰 CRYPTO NEWS
 
-telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+{title}
 
-telegram_response = requests.post(
-    telegram_url,
-    data={
-        "chat_id": CHAT_ID,
-        "text": message
-    },
-    timeout=15
-)
+— Crypto Edge"""
 
-telegram_response.raise_for_status()
+    telegram_response = requests.post(
+        telegram_url,
+        data={
+            "chat_id": CHAT_ID,
+            "text": message
+        },
+        timeout=15
+    )
 
-print("News sent successfully.")
+    telegram_response.raise_for_status()
+
+    count += 1
+
+print(f"{count} news posts sent successfully.")
