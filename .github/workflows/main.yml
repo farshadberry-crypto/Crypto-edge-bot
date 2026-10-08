@@ -8,12 +8,14 @@ schedule:
 jobs:
 test:
 runs-on: ubuntu-latest
+
+```
 steps:
   - name: Checkout
     uses: actions/checkout@v4
 
   - name: Restore News Memory
-    uses: actions/cache@v4
+    uses: actions/cache/restore@v4
     with:
       path: .crypto_edge_seen.json
       key: crypto-edge-seen-${{ github.run_id }}
@@ -32,3 +34,11 @@ steps:
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
     run: python news.py
+
+  - name: Save News Memory
+    if: always()
+    uses: actions/cache/save@v4
+    with:
+      path: .crypto_edge_seen.json
+      key: crypto-edge-seen-${{ github.run_id }}
+```
