@@ -1,28 +1,26 @@
 name: Crypto Edge Auto Bot
 
 'on':
-workflow_dispatch:
-schedule:
-- cron: '0 * * * *'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
-test:
-runs-on: ubuntu-latest
-steps:
-- name: Checkout
-uses: actions/checkout@v4
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-```
-  - name: Install Requests
-    run: pip install requests
+      - name: Install Requests
+        run: pip install requests
 
-  - name: Run Market Update
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-    run: python bot.py
+      - name: Run Market Update
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python bot.py
 
-  - name: Run Crypto News
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-    run: python news.py
-```
+      - name: Run Crypto News
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python news.py
