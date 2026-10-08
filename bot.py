@@ -4,15 +4,15 @@ import requests
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = "@cryptoedgeAlerts"
 
-url = "https://api.coingecko.com/api/v3/simple/price"
-
-params = {
+response = requests.get(
+"https://api.coingecko.com/api/v3/simple/price",
+params={
 "ids": "bitcoin,ethereum",
 "vs_currencies": "usd",
 "include_24hr_change": "true"
-}
-
-response = requests.get(url, params=params, timeout=15)
+},
+timeout=20
+)
 response.raise_for_status()
 data = response.json()
 
@@ -22,19 +22,17 @@ eth = data["ethereum"]
 btc_change = btc["usd_24h_change"]
 eth_change = eth["usd_24h_change"]
 
-if btc_change > 0:
-btc_movement = f"🟢 🚀 +{btc_change:.2f}%"
-elif btc_change < 0:
-btc_movement = f"🔴 📉 {btc_change:.2f}%"
-else:
-btc_movement = "🟡 ➖ 0.00%"
+btc_movement = (
+f"🟢 🚀 +{btc_change:.2f}%" if btc_change > 0
+else f"🔴 📉 {btc_change:.2f}%" if btc_change < 0
+else "🟡 ➖ 0.00%"
+)
 
-if eth_change > 0:
-eth_movement = f"🟢 🚀 +{eth_change:.2f}%"
-elif eth_change < 0:
-eth_movement = f"🔴 📉 {eth_change:.2f}%"
-else:
-eth_movement = "🟡 ➖ 0.00%"
+eth_movement = (
+f"🟢 🚀 +{eth_change:.2f}%" if eth_change > 0
+else f"🔴 📉 {eth_change:.2f}%" if eth_change < 0
+else "🟡 ➖ 0.00%"
+)
 
 message = f"""⚡ CRYPTO EDGE | MARKET PULSE
 
@@ -60,13 +58,9 @@ telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 telegram_response = requests.post(
 telegram_url,
-data={
-"chat_id": CHAT_ID,
-"text": message
-},
-timeout=15
+data={"chat_id": CHAT_ID, "text": message},
+timeout=20
 )
-
 telegram_response.raise_for_status()
 
 print("Market update sent successfully.")
