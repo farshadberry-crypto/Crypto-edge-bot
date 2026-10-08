@@ -2,7 +2,7 @@ import os
 import requests
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHAT_ID = "@CryptoEdge"
+CHAT_ID = "@cryptoedgeAlerts"
 
 url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
