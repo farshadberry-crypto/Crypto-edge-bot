@@ -5,6 +5,9 @@ workflow_dispatch:
 schedule:
 - cron: '0 * * * *'
 
+permissions:
+contents: write
+
 jobs:
 test:
 runs-on: ubuntu-latest
@@ -13,14 +16,6 @@ runs-on: ubuntu-latest
 steps:
   - name: Checkout
     uses: actions/checkout@v4
-
-  - name: Restore News Memory
-    uses: actions/cache/restore@v4
-    with:
-      path: .crypto_edge_seen.json
-      key: crypto-edge-seen-${{ github.run_id }}
-      restore-keys: |
-        crypto-edge-seen-
 
   - name: Install Requests
     run: pip install requests
@@ -36,9 +31,13 @@ steps:
     run: python news.py
 
   - name: Save News Memory
-    if: always()
-    uses: actions/cache/save@v4
-    with:
-      path: .crypto_edge_seen.json
-      key: crypto-edge-seen-${{ github.run_id }}
+    if: success()
+    run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      git add .crypto_edge_seen.json
+      if ! git diff --cached --quiet; then
+        git commit -m "Update sent news history"
+        git push
+      fi
 ```
