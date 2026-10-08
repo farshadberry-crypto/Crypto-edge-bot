@@ -17,3 +17,4 @@ jobs:
         run: |
           pip install requests
           python bot.py
+          python news.py
