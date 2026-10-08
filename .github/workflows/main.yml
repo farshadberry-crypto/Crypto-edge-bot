@@ -12,7 +12,7 @@ jobs:
 test:
 runs-on: ubuntu-latest
 
-```
+
 steps:
   - name: Checkout
     uses: actions/checkout@v4
@@ -40,4 +40,4 @@ steps:
         git commit -m "Update sent news history"
         git push
       fi
-```
+
