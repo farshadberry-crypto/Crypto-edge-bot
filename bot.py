@@ -1,38 +1,55 @@
+```python
 import os
 import requests
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = "@cryptoedgeAlerts"
 
-# Get BTC and ETH prices
 url = "https://api.coingecko.com/api/v3/simple/price"
+
 params = {
     "ids": "bitcoin,ethereum",
     "vs_currencies": "usd",
     "include_24hr_change": "true"
 }
 
-data = requests.get(url, params=params, timeout=15).json()
+response = requests.get(url, params=params, timeout=15)
+response.raise_for_status()
+data = response.json()
 
 btc = data["bitcoin"]
 eth = data["ethereum"]
 
-message = f"""📊 CRYPTO MARKET UPDATE
+def movement(change):
+    if change > 0:
+        return f"🟢 🚀 +{change:.2f}%"
+    elif change < 0:
+        return f"🔴 📉 {change:.2f}%"
+    return "🟡 ➖ 0.00%"
 
-₿ BTC: ${btc["usd"]:,.0f}
-24H: {btc["usd_24h_change"]:+.2f}%
+message = f"""⚡ CRYPTO EDGE | MARKET PULSE
 
-Ξ ETH: ${eth["usd"]:,.0f}
-24H: {eth["usd_24h_change"]:+.2f}%
+🌐 LIVE MARKET SNAPSHOT
 
-━━━━━━━━━━━━━━
-Crypto Edge
-Market data • Analysis • Free Signals
+🟠 ₿ BITCOIN · BTC
+💰 ${btc['usd']:,.2f}
+{movement(btc['usd_24h_change'])} · 24H
+
+🔷 💎 ETHEREUM · ETH
+💰 ${eth['usd']:,.2f}
+{movement(eth['usd_24h_change'])} · 24H
+
+━━━━━━━━━━━━━━━━
+
+📊 TRACK THE MARKET.
+🎯 STAY AHEAD.
+
+⚡ DATA OVER HYPE.
 """
 
 telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-response = requests.post(
+telegram_response = requests.post(
     telegram_url,
     data={
         "chat_id": CHAT_ID,
@@ -41,6 +58,7 @@ response = requests.post(
     timeout=15
 )
 
-response.raise_for_status()
+telegram_response.raise_for_status()
 
-print("Message sent successfully.")
+print("Market update sent successfully.")
+```
