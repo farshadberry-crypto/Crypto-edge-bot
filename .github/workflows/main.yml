@@ -9,20 +9,11 @@ jobs:
 test:
 runs-on: ubuntu-latest
 steps:
-- name: Checkout
-uses: actions/checkout@v4
-
-```
-  - name: Install Requests
-    run: pip install requests
-
-  - name: Run Market Update
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-    run: python bot.py
-
-  - name: Run Crypto News
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-    run: python news.py
-```
+- uses: actions/checkout@v4
+- name: Run Market Update and Crypto News
+env:
+TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+run: |
+pip install requests
+python bot.py
+python news.py
