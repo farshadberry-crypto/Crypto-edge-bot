@@ -1,4 +1,3 @@
-```python
 import os
 import requests
 
@@ -8,9 +7,9 @@ CHAT_ID = "@cryptoedgeAlerts"
 url = "https://api.coingecko.com/api/v3/simple/price"
 
 params = {
-    "ids": "bitcoin,ethereum",
-    "vs_currencies": "usd",
-    "include_24hr_change": "true"
+"ids": "bitcoin,ethereum",
+"vs_currencies": "usd",
+"include_24hr_change": "true"
 }
 
 response = requests.get(url, params=params, timeout=15)
@@ -21,11 +20,11 @@ btc = data["bitcoin"]
 eth = data["ethereum"]
 
 def movement(change):
-    if change > 0:
-        return f"🟢 🚀 +{change:.2f}%"
-    elif change < 0:
-        return f"🔴 📉 {change:.2f}%"
-    return "🟡 ➖ 0.00%"
+if change > 0:
+return f"🟢 🚀 +{change:.2f}%"
+elif change < 0:
+return f"🔴 📉 {change:.2f}%"
+return "🟡 ➖ 0.00%"
 
 message = f"""⚡ CRYPTO EDGE | MARKET PULSE
 
@@ -50,15 +49,14 @@ message = f"""⚡ CRYPTO EDGE | MARKET PULSE
 telegram_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 telegram_response = requests.post(
-    telegram_url,
-    data={
-        "chat_id": CHAT_ID,
-        "text": message
-    },
-    timeout=15
+telegram_url,
+data={
+"chat_id": CHAT_ID,
+"text": message
+},
+timeout=15
 )
 
 telegram_response.raise_for_status()
 
 print("Market update sent successfully.")
-```
