@@ -18,7 +18,7 @@ TELEGRAM_CHAT_ID = os.getenv(
 )
 
 CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
-COINBASE_API = "https://api.exchange.coinbase.com"
+KRAKEN_API = "https://api.kraken.com/0/public"
 FEAR_GREED_URL = "https://api.alternative.me/fng/"
 GLOBAL_URL = "https://api.coinpaprika.com/v1/global"
 
@@ -31,7 +31,9 @@ MIN_VOLUME_USD = 5_000_000
 MIN_HISTORY_POINTS = 3
 MIN_VOLUME_RATIO = 1.25
 MIN_PRICE_CHANGE = 2.0
+
 REQUEST_TIMEOUT = 20
+REQUEST_DELAY = 0.35
 
 
 # =========================
@@ -55,6 +57,17 @@ def save_json(filename, data):
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 
+def get_json(url, params=None, headers=None):
+    response = requests.get(
+        url,
+        params=params,
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
 def send_telegram(message):
     url = (
         f"https://api.telegram.org/"
@@ -71,6 +84,7 @@ def send_telegram(message):
             },
             timeout=REQUEST_TIMEOUT,
         )
+
         response.raise_for_status()
 
         if not response.json().get("ok"):
@@ -90,18 +104,16 @@ def send_telegram(message):
 
 def get_sentiment():
     try:
-        response = requests.get(
+        data = get_json(
             FEAR_GREED_URL,
             params={"limit": 1},
-            timeout=REQUEST_TIMEOUT,
         )
-        response.raise_for_status()
 
-        data = response.json()["data"][0]
+        item = data["data"][0]
 
         return (
-            data["value_classification"].upper(),
-            int(data["value"]),
+            item["value_classification"].upper(),
+            int(item["value"]),
         )
 
     except (
@@ -117,13 +129,7 @@ def get_sentiment():
 
 def get_global_market():
     try:
-        response = requests.get(
-            GLOBAL_URL,
-            timeout=REQUEST_TIMEOUT,
-        )
-        response.raise_for_status()
-
-        data = response.json()
+        data = get_json(GLOBAL_URL)
 
         return {
             "market_cap": data.get("market_cap_usd"),
@@ -199,140 +205,162 @@ def get_market_data():
 
 
 # =========================
-# COINBASE PUBLIC API
+# KRAKEN PUBLIC MARKET API
 # =========================
 
-def get_coinbase_products():
+def normalize_symbol(symbol):
+    symbol = str(symbol).upper()
+
+    aliases = {
+        "XBT": "BTC",
+        "XDG": "DOGE",
+    }
+
+    return aliases.get(symbol, symbol)
+
+
+def get_kraken_usd_pairs():
     """
-    Get available Coinbase USD spot products.
-    No Coinbase API key is required for this public endpoint.
+    Return a mapping from normalized coin symbol to a
+    Kraken USD spot pair. No API key is required.
     """
 
     try:
-        response = requests.get(
-            f"{COINBASE_API}/products",
-            headers={"Accept": "application/json"},
-            timeout=REQUEST_TIMEOUT,
+        data = get_json(
+            f"{KRAKEN_API}/AssetPairs"
         )
-        response.raise_for_status()
 
-        products = response.json()
+        errors = data.get("error", [])
 
-        available = set()
+        if errors:
+            print(f"Kraken AssetPairs errors: {errors}")
+            return None
 
-        for product in products:
-            if (
-                product.get("quote_currency") == "USD"
-                and product.get("status") == "online"
-                and product.get("trading_disabled") is not True
-            ):
-                available.add(product.get("product_id"))
+        result = data.get("result", {})
+        pairs = {}
+
+        for pair_key, item in result.items():
+            if item.get("status") != "online":
+                continue
+
+            wsname = item.get("wsname", "")
+
+            if "/" not in wsname:
+                continue
+
+            base, quote = wsname.split("/", 1)
+
+            if quote != "USD":
+                continue
+
+            symbol = normalize_symbol(base)
+
+            altname = item.get("altname")
+
+            if not altname:
+                continue
+
+            # Keep one available USD pair per normalized symbol.
+            if symbol not in pairs:
+                pairs[symbol] = altname
 
         print(
-            f"Coinbase USD products available: {len(available)}"
+            f"Kraken USD pairs available: {len(pairs)}"
         )
 
-        return available
+        return pairs
 
     except (
         requests.RequestException,
         ValueError,
         TypeError,
     ) as error:
-        print(f"Coinbase product list unavailable: {error}")
+        print(f"Kraken AssetPairs unavailable: {error}")
         return None
 
 
-def get_hourly_volume_ratio(symbol, available_products):
+def get_hourly_volume_ratio(symbol, available_pairs):
     """
-    Compare the latest completed 1-hour candle with the
-    average of the preceding 24 completed hourly candles.
+    Compare the latest completed hourly USD-volume estimate
+    against the average of the preceding 24 completed hours.
 
-    Coinbase candle fields:
-    [time, low, high, open, close, base_volume]
+    Kraken OHLC fields:
+    [time, open, high, low, close, vwap, volume, count]
 
-    Approximate USD volume = base volume * candle close price.
+    Estimated USD volume = base-asset volume * candle VWAP.
+    The currently forming candle is excluded.
     """
 
-    product_id = f"{symbol.upper()}-USD"
-
-    if available_products is None:
+    if available_pairs is None:
         return None
 
-    if product_id not in available_products:
+    symbol = normalize_symbol(symbol)
+    pair = available_pairs.get(symbol)
+
+    if not pair:
         return None
-
-    current_time = now_utc()
-
-    # Request a 27-hour window to allow for candle boundaries.
-    start_time = current_time - timedelta(hours=27)
-
-    params = {
-        "granularity": 3600,
-        "start": start_time.isoformat(),
-        "end": current_time.isoformat(),
-    }
 
     try:
-        response = requests.get(
-            f"{COINBASE_API}/products/"
-            f"{product_id}/candles",
-            params=params,
-            headers={"Accept": "application/json"},
-            timeout=REQUEST_TIMEOUT,
+        data = get_json(
+            f"{KRAKEN_API}/OHLC",
+            params={
+                "pair": pair,
+                "interval": 60,
+            },
         )
 
-        response.raise_for_status()
-        candles = response.json()
+        errors = data.get("error", [])
+
+        if errors:
+            print(
+                f"Kraken OHLC error for {symbol}: {errors}"
+            )
+            return None
+
+        result = data.get("result", {})
+
+        # The result also contains a "last" cursor.
+        candle_keys = [
+            key for key in result
+            if key != "last"
+        ]
+
+        if not candle_keys:
+            return None
+
+        candles = result[candle_keys[0]]
 
         if not isinstance(candles, list):
             return None
 
-        current_timestamp = int(current_time.timestamp())
+        current_timestamp = int(now_utc().timestamp())
 
-        # Sort chronologically; API ordering may vary.
-        candles = sorted(
-            candles,
-            key=lambda candle: int(candle[0]),
-        )
-
-        # Keep only completed hourly candles.
         completed = [
-            candle
-            for candle in candles
-            if len(candle) >= 6
+            candle for candle in candles
+            if len(candle) >= 8
             and int(candle[0]) + 3600 <= current_timestamp
         ]
 
-        # Remove duplicate candle timestamps if any.
-        unique_candles = {}
+        completed.sort(key=lambda candle: int(candle[0]))
 
-        for candle in completed:
-            unique_candles[int(candle[0])] = candle
-
-        completed = [
-            unique_candles[timestamp]
-            for timestamp in sorted(unique_candles)
-        ]
-
+        # Need one latest completed candle plus 24 previous ones.
         if len(completed) < 25:
             return None
 
-        # Latest completed hour plus 24 preceding hours.
         last_25 = completed[-25:]
-
-        quote_volumes = []
+        usd_volumes = []
 
         for candle in last_25:
-            close_price = float(candle[4])
-            base_volume = float(candle[5])
+            vwap = float(candle[5])
+            base_volume = float(candle[6])
 
-            quote_volume = close_price * base_volume
+            if vwap <= 0 or base_volume < 0:
+                return None
 
-            quote_volumes.append(quote_volume)
+            usd_volumes.append(vwap * base_volume)
 
-        previous_24 = quote_volumes[:-1]
-        latest_hour = quote_volumes[-1]
+        previous_24 = usd_volumes[:-1]
+        latest_hour = usd_volumes[-1]
 
         average_volume = sum(previous_24) / len(previous_24)
 
@@ -342,15 +370,14 @@ def get_hourly_volume_ratio(symbol, available_products):
         return latest_hour / average_volume
 
     except requests.HTTPError as error:
-        status_code = (
+        status = (
             error.response.status_code
             if error.response is not None
             else "unknown"
         )
 
         print(
-            f"Coinbase HTTP error for {product_id}: "
-            f"{status_code}"
+            f"Kraken HTTP error for {symbol}: {status}"
         )
         return None
 
@@ -362,13 +389,13 @@ def get_hourly_volume_ratio(symbol, available_products):
         IndexError,
     ) as error:
         print(
-            f"Coinbase candle error for {product_id}: {error}"
+            f"Kraken candle error for {symbol}: {error}"
         )
         return None
 
 
 # =========================
-# PRICE HISTORY
+# HISTORY
 # =========================
 
 def load_history():
@@ -430,25 +457,25 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
     if volume_ratio >= 2.0:
         score += 30
         reasons.append(
-            "Coinbase hourly volume at least 2x its 24h hourly average"
+            "Kraken hourly volume is at least 2x its previous 24h hourly average"
         )
     elif volume_ratio >= 1.5:
         score += 25
         reasons.append(
-            "Coinbase hourly volume at least 1.5x average"
+            "Kraken hourly volume is at least 1.5x average"
         )
     elif volume_ratio >= MIN_VOLUME_RATIO:
         score += 15
         reasons.append(
-            "Coinbase hourly volume above threshold"
+            "Kraken hourly volume exceeds the threshold"
         )
 
     if abs(coin["change_24h"]) >= 5:
         score += 20
-        reasons.append("24h price change at least 5%")
+        reasons.append("24h price change is at least 5%")
     elif abs(coin["change_24h"]) >= MIN_PRICE_CHANGE:
         score += 15
-        reasons.append("24h price change at least 2%")
+        reasons.append("24h price change is at least 2%")
 
     old_prices = [
         float(item["price"])
@@ -462,10 +489,10 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
     if old_prices:
         if coin["price"] > max(old_prices):
             score += 30
-            reasons.append("Price above recorded history")
+            reasons.append("Price is above recorded history")
         elif coin["price"] < min(old_prices):
             score += 30
-            reasons.append("Price below recorded history")
+            reasons.append("Price is below recorded history")
 
     if score >= 50:
         diagnostics["passed_score"] += 1
@@ -532,8 +559,8 @@ def build_market_message(sentiment, fear_greed, market):
 
     lines.extend([
         "",
-        "Hourly volume uses Coinbase USD spot candles.",
-        "This represents Coinbase activity, not the entire crypto market.",
+        "Hourly volume is estimated from Kraken USD spot candles.",
+        "It represents activity on Kraken, not the entire market.",
         "Signals are screening results, not guaranteed trades.",
     ])
 
@@ -549,7 +576,7 @@ def build_signal_message(signal):
         f"24h Change: {signal['change_24h']:+.2f}%",
         f"CMC 24h Volume: ${signal['volume_24h']:,.0f}",
         (
-            "Coinbase Hourly Volume Ratio: "
+            "Kraken Hourly Volume Ratio: "
             f"{signal['hourly_volume_ratio']:.2f}x"
         ),
         f"Score: {signal['score']}/100",
@@ -587,7 +614,7 @@ def main():
     coins = get_market_data()
 
     history = load_history()
-    available_products = get_coinbase_products()
+    available_pairs = get_kraken_usd_pairs()
 
     diagnostics = {
         "insufficient_history": 0,
@@ -603,17 +630,29 @@ def main():
 
     signals = []
 
-    if available_products is None:
+    if available_pairs is None:
         print(
-            "WARNING: Coinbase product list failed. "
+            "WARNING: Kraken pair list failed. "
             "Hourly volume signals will be unavailable."
         )
 
     for coin in coins:
-        ratio = get_hourly_volume_ratio(
-            coin["symbol"],
-            available_products,
-        )
+        previous = history.get(coin["id"], [])
+
+        # Avoid unnecessary API calls for coins that cannot
+        # qualify because their history is too short.
+        if (
+            isinstance(previous, list)
+            and len(previous) >= MIN_HISTORY_POINTS
+            and coin["volume_24h"] >= MIN_VOLUME_USD
+        ):
+            ratio = get_hourly_volume_ratio(
+                coin["symbol"],
+                available_pairs,
+            )
+            time.sleep(REQUEST_DELAY)
+        else:
+            ratio = None
 
         signal = analyze_coin(
             coin,
@@ -626,9 +665,6 @@ def main():
             signals.append(signal)
 
         update_history(history, coin)
-
-        # Avoid sending requests too quickly.
-        time.sleep(0.15)
 
     save_json(HISTORY_FILE, history)
 
@@ -682,7 +718,7 @@ def main():
     if send_telegram(message):
         print("Market Context Report sent successfully.")
     else:
-        print("Market Context Report failed to send.")
+        print("Market Context Report failed.")
 
     if not signals:
         print("No signals met the required criteria.")
