@@ -1,1 +1,39 @@
 
+name: Signal Performance Tracker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  evaluate-signals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run performance tracker
+        env:
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+        run: python signal_performance.py
+
+      - name: Save performance results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add signal_log.json signal_performance_results.json
+          git diff --cached --quiet || git commit -m "Update signal performance results"
+          git push
