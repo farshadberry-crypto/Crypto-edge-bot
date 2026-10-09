@@ -15,6 +15,7 @@ FEAR_GREED_URL = "https://api.alternative.me/fng/?limit=1"
 GLOBAL_MARKET_URL = "https://api.coinpaprika.com/v1/global"
 
 HISTORY_FILE = "smart_money_history.json"
+SIGNAL_LOG_FILE = "signal_log.json"
 
 MAX_COINS = 100
 MAX_ALERTS = 8
@@ -42,21 +43,74 @@ def money(value):
     return f"${value:,.4f}"
 
 
-def load_history():
-    if not os.path.exists(HISTORY_FILE):
-        return {}
+def load_json(filename, default):
+    if not os.path.exists(filename):
+        return default
 
     try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+        with open(filename, "r", encoding="utf-8") as file:
             return json.load(file)
     except (json.JSONDecodeError, OSError):
-        print("History file could not be read. Starting fresh.")
-        return {}
+        print(f"Could not read {filename}. Using default data.")
+        return default
+
+
+def save_json(filename, data):
+    with open(filename, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+
+def load_history():
+    return load_json(HISTORY_FILE, {})
 
 
 def save_history(history):
-    with open(HISTORY_FILE, "w", encoding="utf-8") as file:
-        json.dump(history, file, indent=2)
+    save_json(HISTORY_FILE, history)
+
+
+def record_signals(alerts, timestamp):
+    signals = load_json(SIGNAL_LOG_FILE, [])
+
+    if not isinstance(signals, list):
+        signals = []
+
+    existing_ids = {
+        signal.get("signal_id")
+        for signal in signals
+        if isinstance(signal, dict)
+    }
+
+    added = 0
+
+    for alert in alerts:
+        coin_id = str(alert["coin_id"])
+        signal_id = f"{coin_id}_{timestamp}"
+
+        if signal_id in existing_ids:
+            continue
+
+        signal = {
+            "signal_id": signal_id,
+            "coin_id": coin_id,
+            "name": alert["name"],
+            "symbol": alert["symbol"],
+            "timestamp": timestamp,
+            "entry_price": alert["price"],
+            "direction": (
+                "bullish" if alert["change"] > 0 else "bearish"
+            ),
+            "score": alert["score"],
+            "volume_ratio": round(alert["volume_ratio"], 4),
+            "price_change_24h": alert["change"],
+            "results": {},
+        }
+
+        signals.append(signal)
+        existing_ids.add(signal_id)
+        added += 1
+
+    save_json(SIGNAL_LOG_FILE, signals)
+    print(f"New signals recorded: {added}")
 
 
 def get_sentiment():
@@ -241,6 +295,7 @@ def analyze_coin(coin, history, now):
                 and score >= 50
             ):
                 alert = {
+                    "coin_id": coin_id,
                     "name": coin.get("name", "Unknown"),
                     "symbol": coin.get("symbol", "UNKNOWN"),
                     "rank": rank,
@@ -291,6 +346,7 @@ def build_market_report(sentiment, scanned, bullish, bearish, total_alerts):
     ])
 
     change = sentiment["market_cap_change"]
+
     if change is not None:
         emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
         lines.append(f"📈 Market Cap Change (24H): {emoji} {change:+.2f}%")
@@ -298,6 +354,7 @@ def build_market_report(sentiment, scanned, bullish, bearish, total_alerts):
         lines.append("📈 Market Cap Change (24H): N/A")
 
     dominance = sentiment["btc_dominance"]
+
     if dominance is not None:
         lines.append(f"₿ BTC Dominance: {dominance:.2f}%")
     else:
@@ -421,10 +478,14 @@ def main():
     alerts.sort(key=lambda item: item["score"], reverse=True)
     alerts = alerts[:MAX_ALERTS]
 
+    # Record the alerts selected for reporting.
+    # The performance tracker will evaluate them later.
+    if alerts:
+        record_signals(alerts, now)
+
     bullish = sum(1 for item in alerts if item["change"] > 0)
     bearish = sum(1 for item in alerts if item["change"] < 0)
 
-    # Always send the market report, even when there are no signals.
     report = build_market_report(
         sentiment,
         len(coins),
@@ -432,6 +493,7 @@ def main():
         bearish,
         len(alerts),
     )
+
     send_telegram(report)
     print("Market Context Report sent successfully.")
 
