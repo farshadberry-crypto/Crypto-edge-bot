@@ -89,7 +89,7 @@ def record_signals(alerts, timestamp):
         if signal_id in existing_ids:
             continue
 
-        signal = {
+        signals.append({
             "signal_id": signal_id,
             "coin_id": coin_id,
             "name": alert["name"],
@@ -103,9 +103,8 @@ def record_signals(alerts, timestamp):
             "volume_ratio": round(alert["volume_ratio"], 4),
             "price_change_24h": alert["change"],
             "results": {},
-        }
+        })
 
-        signals.append(signal)
         existing_ids.add(signal_id)
         added += 1
 
@@ -209,7 +208,7 @@ def get_market_data():
     return result.get("data", [])
 
 
-def analyze_coin(coin, history, now):
+def analyze_coin(coin, history, now, diagnostics):
     coin_id = str(coin["id"])
     quote = coin.get("quote", {}).get("USD", {})
 
@@ -219,6 +218,7 @@ def analyze_coin(coin, history, now):
     rank = coin.get("cmc_rank")
 
     if price is None or volume is None or change is None:
+        diagnostics["missing_data"] += 1
         return None
 
     price = float(price)
@@ -226,6 +226,7 @@ def analyze_coin(coin, history, now):
     change = float(change)
 
     if price <= 0 or volume < MIN_VOLUME_USD:
+        diagnostics["below_min_volume"] += 1
         return None
 
     previous = history.get(coin_id, [])
@@ -245,6 +246,8 @@ def analyze_coin(coin, history, now):
     alert = None
 
     if len(old_volumes) >= MIN_HISTORY_POINTS:
+        diagnostics["checked_history"] += 1
+
         average_volume = sum(old_volumes) / len(old_volumes)
 
         if average_volume > 0:
@@ -282,18 +285,29 @@ def analyze_coin(coin, history, now):
                 score += 30
                 reasons.append("Price below saved snapshot lows")
 
-            if change > 0:
-                direction = "🟢 BULLISH MOMENTUM"
-            elif change < 0:
-                direction = "🔴 BEARISH MOMENTUM"
-            else:
-                direction = "⚪ NEUTRAL"
+            if volume_ratio >= MIN_VOLUME_RATIO:
+                diagnostics["passed_volume"] += 1
+
+            if abs(change) >= MIN_PRICE_CHANGE:
+                diagnostics["passed_change"] += 1
+
+            if score >= 50:
+                diagnostics["passed_score"] += 1
 
             if (
                 volume_ratio >= MIN_VOLUME_RATIO
                 and abs(change) >= MIN_PRICE_CHANGE
                 and score >= 50
             ):
+                diagnostics["passed_all"] += 1
+
+                if change > 0:
+                    direction = "🟢 BULLISH MOMENTUM"
+                elif change < 0:
+                    direction = "🔴 BEARISH MOMENTUM"
+                else:
+                    direction = "⚪ NEUTRAL"
+
                 alert = {
                     "coin_id": coin_id,
                     "name": coin.get("name", "Unknown"),
@@ -466,20 +480,32 @@ def main():
         sentiment["fear_greed"],
     )
 
+    diagnostics = {
+        "missing_data": 0,
+        "below_min_volume": 0,
+        "checked_history": 0,
+        "passed_volume": 0,
+        "passed_change": 0,
+        "passed_score": 0,
+        "passed_all": 0,
+    }
+
     alerts = []
 
     for coin in coins:
-        alert = analyze_coin(coin, history, now)
+        alert = analyze_coin(coin, history, now, diagnostics)
         if alert is not None:
             alerts.append(alert)
 
     save_history(history)
 
+    print("Diagnostic report:")
+    for key, value in diagnostics.items():
+        print(f"{key}: {value}")
+
     alerts.sort(key=lambda item: item["score"], reverse=True)
     alerts = alerts[:MAX_ALERTS]
 
-    # Record the alerts selected for reporting.
-    # The performance tracker will evaluate them later.
     if alerts:
         record_signals(alerts, now)
 
