@@ -1,4 +1,3 @@
-
 name: Crypto Edge Smart Money Radar
 
 'on':
@@ -26,14 +25,14 @@ jobs:
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
         run: python smart_money.py
 
-      - name: Save Smart Money History
+      - name: Save Smart Money History and Signals
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add smart_money_history.json
+          git add smart_money_history.json signal_log.json
           if ! git diff --cached --quiet; then
-            git commit -m "Update smart money history"
+            git commit -m "Update smart money history and signals"
             git push
           else
-            echo "Smart money history unchanged."
+            echo "History and signal log unchanged."
           fi
