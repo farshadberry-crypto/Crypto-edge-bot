@@ -1,45 +1,32 @@
 
+import json
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 
 import requests
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+CMC_API_KEY = os.environ["CMC_API_KEY"]
 CHAT_ID = "@cryptoedgeAlerts"
 
 TELEGRAM_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-BINANCE_URL = "https://api.binance.com"
+CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
 
-MAX_PAIRS = 60
+HISTORY_FILE = "smart_money_history.json"
+
+MAX_COINS = 100
 MAX_ALERTS = 8
-MIN_QUOTE_VOLUME = 5_000_000
-MIN_VOLUME_RATIO = 1.5
-MIN_SCORE = 55
-CANDLE_INTERVAL = "1h"
-CANDLE_COUNT = 22
-
-EXCLUDED_BASES = {
-    "USDC", "USDT", "BUSD", "FDUSD", "TUSD",
-    "USDE", "USDD", "DAI", "EUR", "TRY",
-    "BRL", "USDP", "PYUSD", "USTC"
-}
-
-
-def get_json(url, params=None):
-    response = requests.get(
-        url,
-        params=params,
-        timeout=20,
-        headers={"User-Agent": "CryptoEdgeRadar/1.0"},
-    )
-    response.raise_for_status()
-    return response.json()
+MIN_VOLUME_USD = 5_000_000
+MIN_HISTORY_POINTS = 3
+MIN_VOLUME_RATIO = 1.25
+MIN_PRICE_CHANGE = 2.0
 
 
 def money(value):
     value = float(value)
 
     for suffix, divisor in [
+        ("T", 1_000_000_000_000),
         ("B", 1_000_000_000),
         ("M", 1_000_000),
         ("K", 1_000),
@@ -50,193 +37,163 @@ def money(value):
     return f"${value:,.4f}"
 
 
-def get_top_pairs():
-    tickers = get_json(
-        f"{BINANCE_URL}/api/v3/ticker/24hr"
-    )
-
-    exchange_info = get_json(
-        f"{BINANCE_URL}/api/v3/exchangeInfo"
-    )
-
-    tradable = {
-        item["symbol"]
-        for item in exchange_info["symbols"]
-        if item.get("status") == "TRADING"
-        and item.get("isSpotTradingAllowed", False)
-        and item.get("quoteAsset") == "USDT"
-    }
-
-    pairs = []
-
-    for ticker in tickers:
-        symbol = ticker.get("symbol", "")
-
-        if not symbol.endswith("USDT"):
-            continue
-
-        if symbol not in tradable:
-            continue
-
-        base = symbol[:-4]
-
-        if base in EXCLUDED_BASES:
-            continue
-
-        try:
-            quote_volume = float(ticker["quoteVolume"])
-            price = float(ticker["lastPrice"])
-            change_24h = float(ticker["priceChangePercent"])
-        except (KeyError, TypeError, ValueError):
-            continue
-
-        if quote_volume < MIN_QUOTE_VOLUME or price <= 0:
-            continue
-
-        pairs.append({
-            "symbol": symbol,
-            "base": base,
-            "quote_volume": quote_volume,
-            "price": price,
-            "change_24h": change_24h,
-        })
-
-    pairs.sort(
-        key=lambda item: item["quote_volume"],
-        reverse=True,
-    )
-
-    return pairs[:MAX_PAIRS]
-
-
-def analyze_pair(pair):
-    symbol = pair["symbol"]
+def load_history():
+    if not os.path.exists(HISTORY_FILE):
+        return {}
 
     try:
-        candles = get_json(
-            f"{BINANCE_URL}/api/v3/klines",
-            params={
-                "symbol": symbol,
-                "interval": CANDLE_INTERVAL,
-                "limit": CANDLE_COUNT,
-            },
+        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except (json.JSONDecodeError, OSError):
+        print("History file could not be read. Starting fresh.")
+        return {}
+
+
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as file:
+        json.dump(history, file, indent=2)
+
+
+def get_market_data():
+    response = requests.get(
+        CMC_URL,
+        headers={
+            "X-CMC_PRO_API_KEY": CMC_API_KEY,
+            "Accept": "application/json",
+        },
+        params={
+            "start": 1,
+            "limit": MAX_COINS,
+            "convert": "USD",
+            "sort": "market_cap",
+            "sort_dir": "desc",
+        },
+        timeout=30,
+    )
+
+    response.raise_for_status()
+    result = response.json()
+
+    status = result.get("status", {})
+    if status.get("error_code", 0) != 0:
+        raise RuntimeError(
+            "CoinMarketCap API error: "
+            + str(status.get("error_message"))
         )
 
-        # Exclude the current, unfinished candle.
-        candles = candles[:-1]
+    return result.get("data", [])
 
-        if len(candles) < 21:
-            return None
 
-        previous = candles[:-1]
-        latest = candles[-1]
+def analyze_coin(coin, history, now):
+    coin_id = str(coin["id"])
+    quote = coin.get("quote", {}).get("USD", {})
 
-        open_price = float(latest[1])
-        high_price = float(latest[2])
-        low_price = float(latest[3])
-        close_price = float(latest[4])
-        current_volume = float(latest[5])
+    price = quote.get("price")
+    volume = quote.get("volume_24h")
+    change = quote.get("percent_change_24h")
+    rank = coin.get("cmc_rank")
 
-        previous_volumes = [
-            float(candle[5])
-            for candle in previous[-20:]
-        ]
-
-        average_volume = (
-            sum(previous_volumes) / len(previous_volumes)
-        )
-
-        if average_volume <= 0 or open_price <= 0:
-            return None
-
-        volume_ratio = current_volume / average_volume
-        candle_change = (
-            (close_price - open_price) / open_price
-        ) * 100
-
-        previous_high = max(
-            float(candle[2]) for candle in previous[-20:]
-        )
-        previous_low = min(
-            float(candle[3]) for candle in previous[-20:]
-        )
-
-        breakout_up = close_price > previous_high
-        breakout_down = close_price < previous_low
-
-        score = 0
-        reasons = []
-
-        if volume_ratio >= 2.5:
-            score += 35
-            reasons.append("Volume spike > 2.5x")
-        elif volume_ratio >= 1.8:
-            score += 25
-            reasons.append("Volume spike > 1.8x")
-        elif volume_ratio >= MIN_VOLUME_RATIO:
-            score += 15
-            reasons.append("Volume above baseline")
-
-        if breakout_up:
-            score += 35
-            reasons.append("Breakout above 20-candle high")
-        elif breakout_down:
-            score += 35
-            reasons.append("Breakdown below 20-candle low")
-
-        if abs(candle_change) >= 1.5:
-            score += 20
-            reasons.append("Strong hourly candle")
-        elif abs(candle_change) >= 0.75:
-            score += 10
-            reasons.append("Notable hourly candle")
-
-        if candle_change > 0:
-            direction = "🟢 BULLISH"
-        elif candle_change < 0:
-            direction = "🔴 BEARISH"
-        else:
-            direction = "⚪ NEUTRAL"
-
-        # Require volume confirmation plus price movement
-        # or a confirmed breakout/breakdown.
-        has_price_confirmation = (
-            breakout_up
-            or breakout_down
-            or abs(candle_change) >= 0.75
-        )
-
-        if (
-            volume_ratio < MIN_VOLUME_RATIO
-            or score < MIN_SCORE
-            or not has_price_confirmation
-        ):
-            return None
-
-        return {
-            "base": pair["base"],
-            "symbol": symbol,
-            "price": close_price,
-            "volume_ratio": volume_ratio,
-            "volume_24h": pair["quote_volume"],
-            "change_24h": pair["change_24h"],
-            "candle_change": candle_change,
-            "score": score,
-            "direction": direction,
-            "breakout_up": breakout_up,
-            "breakout_down": breakout_down,
-            "reasons": reasons,
-        }
-
-    except (
-        requests.RequestException,
-        KeyError,
-        TypeError,
-        ValueError,
-        IndexError,
-    ) as error:
-        print(f"Skipped {symbol}: {error}")
+    if price is None or volume is None or change is None:
         return None
+
+    price = float(price)
+    volume = float(volume)
+    change = float(change)
+
+    if price <= 0 or volume < MIN_VOLUME_USD:
+        return None
+
+    previous = history.get(coin_id, [])
+
+    old_volumes = [
+        float(item["volume"])
+        for item in previous
+        if item.get("volume") is not None
+    ]
+
+    old_prices = [
+        float(item["price"])
+        for item in previous
+        if item.get("price") is not None
+    ]
+
+    alert = None
+
+    if len(old_volumes) >= MIN_HISTORY_POINTS:
+        average_volume = sum(old_volumes) / len(old_volumes)
+
+        if average_volume > 0:
+            volume_ratio = volume / average_volume
+
+            previous_high = max(old_prices) if old_prices else price
+            previous_low = min(old_prices) if old_prices else price
+
+            breakout_up = price > previous_high
+            breakout_down = price < previous_low
+
+            score = 0
+            reasons = []
+
+            if volume_ratio >= 2.0:
+                score += 30
+                reasons.append("24h volume is 2x+ saved baseline")
+            elif volume_ratio >= 1.5:
+                score += 25
+                reasons.append("24h volume is 1.5x+ saved baseline")
+            elif volume_ratio >= MIN_VOLUME_RATIO:
+                score += 15
+                reasons.append("24h volume is above saved baseline")
+
+            if abs(change) >= 5:
+                score += 20
+                reasons.append("Strong 24h price movement")
+            elif abs(change) >= MIN_PRICE_CHANGE:
+                score += 15
+                reasons.append("Notable 24h price movement")
+
+            if breakout_up:
+                score += 30
+                reasons.append("Price above saved snapshot highs")
+            elif breakout_down:
+                score += 30
+                reasons.append("Price below saved snapshot lows")
+
+            if change > 0:
+                direction = "🟢 BULLISH MOMENTUM"
+            elif change < 0:
+                direction = "🔴 BEARISH MOMENTUM"
+            else:
+                direction = "⚪ NEUTRAL"
+
+            if (
+                volume_ratio >= MIN_VOLUME_RATIO
+                and abs(change) >= MIN_PRICE_CHANGE
+                and score >= 50
+            ):
+                alert = {
+                    "name": coin.get("name", "Unknown"),
+                    "symbol": coin.get("symbol", "UNKNOWN"),
+                    "rank": rank,
+                    "price": price,
+                    "volume": volume,
+                    "volume_ratio": volume_ratio,
+                    "change": change,
+                    "score": score,
+                    "direction": direction,
+                    "breakout_up": breakout_up,
+                    "breakout_down": breakout_down,
+                    "reasons": reasons,
+                }
+
+    previous.append({
+        "time": now,
+        "price": price,
+        "volume": volume,
+    })
+
+    history[coin_id] = previous[-14:]
+
+    return alert
 
 
 def build_message(alerts):
@@ -244,31 +201,31 @@ def build_message(alerts):
         "⚡ CRYPTO EDGE",
         "━━━━━━━━━━━━━━━━━━",
         "🛰 SMART MONEY RADAR",
-        "📊 SPOT MARKET ACTIVITY",
+        "📊 MARKET ACTIVITY SCANNER",
         "",
-        "Signals based on completed 1H candles.",
-        "Volume is compared with the previous 20 candles.",
+        "Source: CoinMarketCap",
+        "Signals use saved market snapshots.",
         "",
     ]
 
     for item in alerts:
         if item["breakout_up"]:
-            setup = "🚀 RANGE BREAKOUT"
+            setup = "🚀 ABOVE SAVED PRICE RANGE"
         elif item["breakout_down"]:
-            setup = "⚠️ RANGE BREAKDOWN"
-        elif item["candle_change"] > 0:
-            setup = "📈 BULLISH MOMENTUM"
+            setup = "⚠️ BELOW SAVED PRICE RANGE"
         else:
-            setup = "📉 BEARISH MOMENTUM"
+            setup = "📊 MOMENTUM WATCH"
+
+        change_text = f"{item['change']:+.2f}%"
 
         lines.extend([
-            f"{item['direction']} | {item['base']}",
-            f"🎯 Signal Score: {item['score']}/90",
+            f"{item['direction']}",
+            f"💎 {item['symbol']} | Rank #{item['rank']}",
+            f"🎯 Signal Score: {item['score']}/80",
             f"💵 Price: {money(item['price'])}",
-            f"🔥 Hourly Volume: {item['volume_ratio']:.2f}x baseline",
-            f"📊 24H Volume: {money(item['volume_24h'])}",
-            f"📈 24H Change: {item['change_24h']:+.2f}%",
-            f"🕯 Hourly Change: {item['candle_change']:+.2f}%",
+            f"📈 24H Change: {change_text}",
+            f"📊 24H Volume: {money(item['volume'])}",
+            f"🔥 Volume vs Baseline: {item['volume_ratio']:.2f}x",
             f"🔎 Setup: {setup}",
             "🧠 Evidence:",
         ])
@@ -281,8 +238,9 @@ def build_message(alerts):
     lines.extend([
         "━━━━━━━━━━━━━━━━━━",
         "ℹ️ Score measures observed conditions, not probability.",
-        "⚠️ This does not confirm institutional or smart-money flows.",
-        "⚠️ Not financial advice or an automatic trade signal.",
+        "⚠️ Volume snapshots overlap across the 24h window.",
+        "⚠️ This does not confirm institutional money flows.",
+        "⚠️ Not a guaranteed trading signal.",
         "🎯 DATA OVER HYPE",
         "⚡ STAY AHEAD",
     ])
@@ -301,50 +259,47 @@ def send_telegram(message):
     )
 
     response.raise_for_status()
-
     result = response.json()
 
     if not result.get("ok"):
         raise RuntimeError(
-            f"Telegram rejected the message: {result}"
+            "Telegram rejected the message: "
+            + str(result)
         )
 
 
 def main():
     print("Starting Crypto Edge Smart Money Radar...")
 
-    pairs = get_top_pairs()
-    print(f"Scanning {len(pairs)} USDT spot pairs...")
+    history = load_history()
+    coins = get_market_data()
+    now = datetime.now(timezone.utc).isoformat()
 
     alerts = []
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [
-            executor.submit(analyze_pair, pair)
-            for pair in pairs
-        ]
+    for coin in coins:
+        alert = analyze_coin(coin, history, now)
 
-        for future in as_completed(futures):
-            result = future.result()
+        if alert is not None:
+            alerts.append(alert)
 
-            if result is not None:
-                alerts.append(result)
+    # Save market snapshots even if no alerts are found.
+    save_history(history)
 
     alerts.sort(
         key=lambda item: item["score"],
         reverse=True,
     )
-
     alerts = alerts[:MAX_ALERTS]
+
+    print(f"Processed {len(coins)} assets.")
 
     if not alerts:
         print("No signals met the required criteria.")
         return
 
-    message = build_message(alerts)
-    send_telegram(message)
-
-    print(f"Successfully sent {len(alerts)} radar signals.")
+    send_telegram(build_message(alerts))
+    print(f"Sent {len(alerts)} Smart Money Radar alerts.")
 
 
 if __name__ == "__main__":
