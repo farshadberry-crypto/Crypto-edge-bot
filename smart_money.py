@@ -11,6 +11,8 @@ CHAT_ID = "@cryptoedgeAlerts"
 
 TELEGRAM_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
+FEAR_GREED_URL = "https://api.alternative.me/fng/?limit=1"
+GLOBAL_MARKET_URL = "https://api.coinpaprika.com/v1/global"
 
 HISTORY_FILE = "smart_money_history.json"
 
@@ -23,6 +25,9 @@ MIN_PRICE_CHANGE = 2.0
 
 
 def money(value):
+    if value is None:
+        return "N/A"
+
     value = float(value)
 
     for suffix, divisor in [
@@ -54,6 +59,59 @@ def save_history(history):
         json.dump(history, file, indent=2)
 
 
+def get_sentiment():
+    """Fetch market sentiment without blocking the main scanner."""
+    sentiment = {
+        "fear_greed": None,
+        "label": "UNAVAILABLE",
+        "market_cap_change": None,
+        "btc_dominance": None,
+    }
+
+    try:
+        response = requests.get(FEAR_GREED_URL, timeout=15)
+        response.raise_for_status()
+        data = response.json()["data"][0]
+
+        value = int(data["value"])
+
+        if value <= 24:
+            label = "EXTREME FEAR"
+        elif value <= 44:
+            label = "FEAR"
+        elif value <= 55:
+            label = "NEUTRAL"
+        elif value <= 74:
+            label = "GREED"
+        else:
+            label = "EXTREME GREED"
+
+        sentiment["fear_greed"] = value
+        sentiment["label"] = label
+
+    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as error:
+        print(f"Fear & Greed unavailable: {error}")
+
+    try:
+        response = requests.get(GLOBAL_MARKET_URL, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+
+        change = data.get("market_cap_change_24h")
+        dominance = data.get("bitcoin_dominance_percentage")
+
+        if change is not None:
+            sentiment["market_cap_change"] = float(change)
+
+        if dominance is not None:
+            sentiment["btc_dominance"] = float(dominance)
+
+    except (requests.RequestException, ValueError, TypeError) as error:
+        print(f"Global market data unavailable: {error}")
+
+    return sentiment
+
+
 def get_market_data():
     response = requests.get(
         CMC_URL,
@@ -75,6 +133,7 @@ def get_market_data():
     result = response.json()
 
     status = result.get("status", {})
+
     if status.get("error_code", 0) != 0:
         raise RuntimeError(
             "CoinMarketCap API error: "
@@ -196,7 +255,7 @@ def analyze_coin(coin, history, now):
     return alert
 
 
-def build_message(alerts):
+def build_message(alerts, sentiment):
     lines = [
         "⚡ CRYPTO EDGE",
         "━━━━━━━━━━━━━━━━━━",
@@ -206,7 +265,39 @@ def build_message(alerts):
         "Source: CoinMarketCap",
         "Signals use saved market snapshots.",
         "",
+        "🧠 MARKET SENTIMENT",
     ]
+
+    if sentiment["fear_greed"] is not None:
+        lines.append(
+            f"😨 Fear & Greed: {sentiment['fear_greed']}/100 "
+            f"({sentiment['label']})"
+        )
+    else:
+        lines.append("😨 Fear & Greed: Unavailable")
+
+    if sentiment["market_cap_change"] is not None:
+        change = sentiment["market_cap_change"]
+        emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
+        lines.append(
+            f"🌍 Global Market Cap Change (24H): {emoji} {change:+.2f}%"
+        )
+    else:
+        lines.append("🌍 Global Market Cap Change (24H): N/A")
+
+    if sentiment["btc_dominance"] is not None:
+        lines.append(
+            f"₿ Bitcoin Dominance: {sentiment['btc_dominance']:.2f}%"
+        )
+    else:
+        lines.append("₿ Bitcoin Dominance: N/A")
+
+    lines.extend([
+        "",
+        "Sentiment is context, not a trade signal.",
+        "━━━━━━━━━━━━━━━━━━",
+        "",
+    ])
 
     for item in alerts:
         if item["breakout_up"]:
@@ -216,14 +307,12 @@ def build_message(alerts):
         else:
             setup = "📊 MOMENTUM WATCH"
 
-        change_text = f"{item['change']:+.2f}%"
-
         lines.extend([
-            f"{item['direction']}",
+            item["direction"],
             f"💎 {item['symbol']} | Rank #{item['rank']}",
             f"🎯 Signal Score: {item['score']}/80",
             f"💵 Price: {money(item['price'])}",
-            f"📈 24H Change: {change_text}",
+            f"📈 24H Change: {item['change']:+.2f}%",
             f"📊 24H Volume: {money(item['volume'])}",
             f"🔥 Volume vs Baseline: {item['volume_ratio']:.2f}x",
             f"🔎 Setup: {setup}",
@@ -275,6 +364,14 @@ def main():
     coins = get_market_data()
     now = datetime.now(timezone.utc).isoformat()
 
+    sentiment = get_sentiment()
+    print(
+        "Sentiment:",
+        sentiment["label"],
+        "| Fear & Greed:",
+        sentiment["fear_greed"],
+    )
+
     alerts = []
 
     for coin in coins:
@@ -298,7 +395,7 @@ def main():
         print("No signals met the required criteria.")
         return
 
-    send_telegram(build_message(alerts))
+    send_telegram(build_message(alerts, sentiment))
     print(f"Sent {len(alerts)} Smart Money Radar alerts.")
 
 
