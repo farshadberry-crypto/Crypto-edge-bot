@@ -1,9 +1,11 @@
 import os
 import json
 import requests
+
 from datetime import datetime, timezone
 
 CMC_API_KEY = os.getenv("CMC_API_KEY")
+
 LOG_FILE = "signal_log.json"
 RESULT_FILE = "signal_performance_results.json"
 
@@ -23,132 +25,195 @@ def save_json(filename, data):
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 
+def parse_timestamp(value):
+    if not value:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(
+            value.replace("Z", "+00:00")
+        )
+
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+
+        return parsed.astimezone(timezone.utc)
+
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
 def main():
     print("Starting Signal Performance Tracker...")
 
     signals = load_json(LOG_FILE, [])
     results = load_json(RESULT_FILE, [])
 
+    if not isinstance(signals, list):
+        signals = []
+
+    if not isinstance(results, list):
+        results = []
+
     now = datetime.now(timezone.utc)
 
     if not signals:
-        summary = {
-            "updated_at": now.isoformat(),
-            "signals_checked": 0,
-            "checkpoints_recorded": 0,
-            "status": "waiting_for_signals",
-            "note": "No signals have been recorded by smart_money.py yet."
-        }
-
-        results.append(summary)
-        save_json(RESULT_FILE, results)
-        print("No signals yet. Empty performance report created.")
+        print("No signals recorded yet.")
         return
 
     if not CMC_API_KEY:
-        raise RuntimeError("Missing CMC_API_KEY environment variable.")
+        raise RuntimeError(
+            "Missing CMC_API_KEY environment variable."
+        )
 
-    checkpoints = {"1h": 1, "4h": 4, "24h": 24}
-    pending_ids = []
+    checkpoints = {
+        "1h": 1,
+        "4h": 4,
+        "24h": 24,
+    }
 
-    for signal in signals:
-        timestamp = signal.get("timestamp")
-        if not timestamp:
-            continue
-
-        try:
-            signal_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-        except ValueError:
-            continue
-
-        if signal_time.tzinfo is None:
-            signal_time = signal_time.replace(tzinfo=timezone.utc)
-
-        for checkpoint, hours in checkpoints.items():
-            if checkpoint not in signal.get("results", {}) and \
-                    (now - signal_time).total_seconds() >= hours * 3600:
-                pending_ids.append(signal.get("coin_id"))
-
-    prices = {}
-
-    if pending_ids:
-        ids = list(dict.fromkeys(str(cid) for cid in pending_ids if cid))
-
-        for start in range(0, len(ids), 100):
-            batch = ids[start:start + 100]
-            response = requests.get(
-                BASE_URL,
-                headers={"X-CMC_PRO_API_KEY": CMC_API_KEY},
-                params={"id": ",".join(batch), "convert": "USD"},
-                timeout=30
-            )
-            response.raise_for_status()
-
-            for coin_id, item in response.json().get("data", {}).items():
-                price = item.get("quote", {}).get("USD", {}).get("price")
-                if price is not None:
-                    prices[str(coin_id)] = float(price)
-
-    updated = 0
+    pending_ids = set()
 
     for signal in signals:
-        coin_id = str(signal.get("coin_id", ""))
-        entry_price = signal.get("entry_price")
-        timestamp = signal.get("timestamp")
+        signal_time = parse_timestamp(signal.get("time"))
+        coin_id = signal.get("id")
+        entry_price = signal.get("price")
 
-        if not coin_id or not entry_price or not timestamp:
+        if not signal_time or not coin_id or not entry_price:
             continue
-
-        try:
-            signal_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-        except ValueError:
-            continue
-
-        if signal_time.tzinfo is None:
-            signal_time = signal_time.replace(tzinfo=timezone.utc)
 
         signal.setdefault("results", {})
 
         for checkpoint, hours in checkpoints.items():
+            elapsed = (now - signal_time).total_seconds()
+
+            if (
+                checkpoint not in signal["results"]
+                and elapsed >= hours * 3600
+            ):
+                pending_ids.add(str(coin_id))
+
+    prices = {}
+
+    ids = sorted(pending_ids)
+
+    for start in range(0, len(ids), 100):
+        batch = ids[start:start + 100]
+
+        response = requests.get(
+            BASE_URL,
+            headers={
+                "X-CMC_PRO_API_KEY": CMC_API_KEY,
+            },
+            params={
+                "id": ",".join(batch),
+                "convert": "USD",
+            },
+            timeout=30,
+        )
+
+        response.raise_for_status()
+
+        data = response.json().get("data", {})
+
+        for coin_id, item in data.items():
+            price = (
+                item.get("quote", {})
+                .get("USD", {})
+                .get("price")
+            )
+
+            if price is not None:
+                prices[str(coin_id)] = float(price)
+
+    updated = 0
+    signals_with_results = 0
+
+    for signal in signals:
+        signal_time = parse_timestamp(signal.get("time"))
+        coin_id = str(signal.get("id", ""))
+        entry_price = signal.get("price")
+
+        if (
+            not signal_time
+            or not coin_id
+            or entry_price is None
+        ):
+            continue
+
+        try:
+            entry_price = float(entry_price)
+        except (ValueError, TypeError):
+            continue
+
+        if entry_price <= 0:
+            continue
+
+        signal.setdefault("results", {})
+        current_price = prices.get(coin_id)
+
+        if current_price is None:
+            continue
+
+        direction = str(
+            signal.get("direction", "BULLISH")
+        ).upper()
+
+        for checkpoint, hours in checkpoints.items():
+            elapsed = (now - signal_time).total_seconds()
+
             if checkpoint in signal["results"]:
                 continue
 
-            if (now - signal_time).total_seconds() < hours * 3600:
-                continue
-
-            current_price = prices.get(coin_id)
-            if current_price is None:
+            if elapsed < hours * 3600:
                 continue
 
             change_pct = (
-                (current_price - float(entry_price)) / float(entry_price)
+                (current_price - entry_price) / entry_price
             ) * 100
 
-            direction = signal.get("direction", "bullish").lower()
-            directional_pct = -change_pct if direction in ("bearish", "short") else change_pct
+            directional_pct = (
+                -change_pct
+                if direction in ("BEARISH", "SHORT")
+                else change_pct
+            )
 
             signal["results"][checkpoint] = {
                 "checked_at": now.isoformat(),
+                "entry_price": entry_price,
                 "price": current_price,
                 "price_change_pct": round(change_pct, 4),
-                "directional_change_pct": round(directional_pct, 4)
+                "directional_change_pct": round(
+                    directional_pct, 4
+                ),
+                "direction": direction,
             }
+
             updated += 1
+
+        if signal["results"]:
+            signals_with_results += 1
 
     save_json(LOG_FILE, signals)
 
     summary = {
         "updated_at": now.isoformat(),
         "signals_checked": len(signals),
+        "signals_with_results": signals_with_results,
         "checkpoints_recorded": updated,
         "status": "completed",
-        "note": "Directional price change is an estimate, not actual trading profit."
+        "note": (
+            "Directional price change is an estimate, "
+            "not actual trading profit. Prices are checked "
+            "when this workflow runs after each checkpoint."
+        ),
     }
 
     results.append(summary)
     save_json(RESULT_FILE, results)
 
     print(f"Signals loaded: {len(signals)}")
+    print(f"Signals with results: {signals_with_results}")
     print(f"Checkpoint results recorded: {updated}")
     print("Performance tracking finished.")
 
