@@ -252,6 +252,8 @@ def analyze_coin(coin, history, now, diagnostics):
 
         if average_volume > 0:
             volume_ratio = volume / average_volume
+            diagnostics["volume_ratios"].append(volume_ratio)
+
             previous_high = max(old_prices) if old_prices else price
             previous_low = min(old_prices) if old_prices else price
 
@@ -301,12 +303,11 @@ def analyze_coin(coin, history, now, diagnostics):
             ):
                 diagnostics["passed_all"] += 1
 
-                if change > 0:
-                    direction = "🟢 BULLISH MOMENTUM"
-                elif change < 0:
-                    direction = "🔴 BEARISH MOMENTUM"
-                else:
-                    direction = "⚪ NEUTRAL"
+                direction = (
+                    "🟢 BULLISH MOMENTUM" if change > 0
+                    else "🔴 BEARISH MOMENTUM" if change < 0
+                    else "⚪ NEUTRAL"
+                )
 
                 alert = {
                     "coin_id": coin_id,
@@ -449,10 +450,7 @@ def build_alert_message(alerts, sentiment):
 def send_telegram(message):
     response = requests.post(
         TELEGRAM_URL,
-        data={
-            "chat_id": CHAT_ID,
-            "text": message,
-        },
+        data={"chat_id": CHAT_ID, "text": message},
         timeout=30,
     )
 
@@ -488,6 +486,7 @@ def main():
         "passed_change": 0,
         "passed_score": 0,
         "passed_all": 0,
+        "volume_ratios": [],
     }
 
     alerts = []
@@ -501,7 +500,19 @@ def main():
 
     print("Diagnostic report:")
     for key, value in diagnostics.items():
-        print(f"{key}: {value}")
+        if key != "volume_ratios":
+            print(f"{key}: {value}")
+
+    ratios = diagnostics["volume_ratios"]
+
+    if ratios:
+        print(f"volume_ratio_min: {min(ratios):.4f}")
+        print(f"volume_ratio_max: {max(ratios):.4f}")
+        print(f"volume_ratio_average: {sum(ratios) / len(ratios):.4f}")
+        print(
+            "volume_ratio_below_threshold:",
+            sum(1 for ratio in ratios if ratio < MIN_VOLUME_RATIO),
+        )
 
     alerts.sort(key=lambda item: item["score"], reverse=True)
     alerts = alerts[:MAX_ALERTS]
