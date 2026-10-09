@@ -1,1 +1,69 @@
-[]
+[
+  {
+    "time": "2026-10-09T23:41:48.814161+00:00",
+    "id": "328",
+    "name": "Monero",
+    "symbol": "XMR",
+    "price": 523.7291172815155,
+    "volume_24h": 137482247.0365884,
+    "hourly_volume_ratio": 2.1045,
+    "change_24h": -3.05613723,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-09T23:42:07.064510+00:00",
+    "id": "9104",
+    "name": "AIOZ Network",
+    "symbol": "AIOZ",
+    "price": 0.11655943085609921,
+    "volume_24h": 6173732.73846325,
+    "hourly_volume_ratio": 1.4056,
+    "change_24h": 7.24410438,
+    "score": 65,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 5%",
+      "Price is above recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-09T23:42:03.700378+00:00",
+    "id": "5632",
+    "name": "Arweave",
+    "symbol": "AR",
+    "price": 4.089845484693173,
+    "volume_24h": 11933100.21763892,
+    "hourly_volume_ratio": 1.4832,
+    "change_24h": 2.73230705,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-09T23:42:11.290351+00:00",
+    "id": "6748",
+    "name": "Centrifuge",
+    "symbol": "CFG",
+    "price": 0.1410603227443193,
+    "volume_24h": 9605339.54946552,
+    "hourly_volume_ratio": 2.5107,
+    "change_24h": 5.58811483,
+    "score": 50,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ]
+  }
+]
