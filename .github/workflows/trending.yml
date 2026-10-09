@@ -1,1 +1,26 @@
 
+name: Crypto Edge Trending
+
+'on':
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */4 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  trending:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Requests
+        run: pip install requests
+
+      - name: Run Trending Report
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python trending.py
