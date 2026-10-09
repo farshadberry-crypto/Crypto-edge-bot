@@ -1,22 +1,12 @@
-```python
 import os
 import json
 import time
 import requests
-
 from datetime import datetime, timezone
-
-
-# =========================
-# CONFIGURATION
-# =========================
 
 CMC_API_KEY = os.environ["CMC_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID = os.getenv(
-    "TELEGRAM_CHAT_ID",
-    "@cryptoedgeAlerts"
-)
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
 
 CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
@@ -31,20 +21,12 @@ MAX_COINS = 100
 MAX_ALERTS = 8
 MIN_VOLUME_USD = 5_000_000
 MIN_HISTORY_POINTS = 3
-
-# Minimum hourly volume compared with the average of
-# the previous 24 completed hourly candles.
 MIN_VOLUME_RATIO = 1.25
-
 MIN_PRICE_CHANGE = 2.0
 REQUEST_TIMEOUT = 15
 
 
-# =========================
-# GENERAL HELPERS
-# =========================
-
-def utc_now():
+def now_utc():
     return datetime.now(timezone.utc).isoformat()
 
 
@@ -62,10 +44,7 @@ def save_json(filename, data):
 
 
 def send_telegram(message):
-    url = (
-        f"https://api.telegram.org/"
-        f"bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    )
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     try:
         response = requests.post(
@@ -79,21 +58,16 @@ def send_telegram(message):
         )
         response.raise_for_status()
 
-        result = response.json()
-        if not result.get("ok"):
-            print("Telegram API returned an unsuccessful response.")
+        if not response.json().get("ok"):
+            print("Telegram returned an unsuccessful response.")
             return False
 
         return True
 
-    except requests.RequestException as error:
+    except (requests.RequestException, ValueError) as error:
         print(f"Telegram error: {error}")
         return False
 
-
-# =========================
-# MARKET SENTIMENT
-# =========================
 
 def get_sentiment():
     try:
@@ -103,42 +77,25 @@ def get_sentiment():
             timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
-
         data = response.json()["data"][0]
-        value = int(data["value"])
-        classification = data["value_classification"].upper()
+        return data["value_classification"].upper(), int(data["value"])
 
-        return classification, value
-
-    except (
-        requests.RequestException,
-        KeyError,
-        IndexError,
-        TypeError,
-        ValueError,
-    ) as error:
-        print(f"Fear & Greed unavailable: {error}")
+    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as error:
+        print(f"Sentiment unavailable: {error}")
         return "UNKNOWN", None
 
 
 def get_global_market():
     try:
-        response = requests.get(
-            GLOBAL_URL,
-            timeout=REQUEST_TIMEOUT,
-        )
+        response = requests.get(GLOBAL_URL, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         data = response.json()
 
         return {
             "market_cap": data.get("market_cap_usd"),
             "volume_24h": data.get("volume_24h_usd"),
-            "bitcoin_dominance": data.get(
-                "bitcoin_dominance_percentage"
-            ),
-            "market_cap_change_24h": data.get(
-                "market_cap_change_24h"
-            ),
+            "btc_dominance": data.get("bitcoin_dominance_percentage"),
+            "market_change": data.get("market_cap_change_24h"),
         }
 
     except (requests.RequestException, ValueError) as error:
@@ -146,50 +103,38 @@ def get_global_market():
         return {}
 
 
-# =========================
-# COINMARKETCAP DATA
-# =========================
-
 def get_market_data():
-    headers = {
-        "Accepts": "application/json",
-        "X-CMC_PRO_API_KEY": CMC_API_KEY,
-    }
-
-    params = {
-        "start": 1,
-        "limit": MAX_COINS,
-        "convert": "USD",
-        "sort": "market_cap",
-        "sort_dir": "desc",
-        "cryptocurrency_type": "coins",
-    }
-
     response = requests.get(
         CMC_URL,
-        headers=headers,
-        params=params,
+        headers={
+            "Accepts": "application/json",
+            "X-CMC_PRO_API_KEY": CMC_API_KEY,
+        },
+        params={
+            "start": 1,
+            "limit": MAX_COINS,
+            "convert": "USD",
+            "sort": "market_cap",
+            "sort_dir": "desc",
+            "cryptocurrency_type": "coins",
+        },
         timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
-
     payload = response.json()
 
     if "data" not in payload:
-        raise RuntimeError(
-            "CoinMarketCap response did not contain market data."
-        )
+        raise RuntimeError("CoinMarketCap did not return market data.")
 
     coins = []
 
     for item in payload["data"]:
         quote = item.get("quote", {}).get("USD", {})
-
         price = quote.get("price")
-        volume_24h = quote.get("volume_24h")
-        change_24h = quote.get("percent_change_24h")
+        volume = quote.get("volume_24h")
+        change = quote.get("percent_change_24h")
 
-        if price is None or volume_24h is None or change_24h is None:
+        if price is None or volume is None or change is None:
             continue
 
         coins.append({
@@ -197,44 +142,30 @@ def get_market_data():
             "name": item["name"],
             "symbol": item["symbol"].upper(),
             "price": float(price),
-            "volume_24h": float(volume_24h),
-            "change_24h": float(change_24h),
+            "volume_24h": float(volume),
+            "change_24h": float(change),
             "market_cap": float(quote.get("market_cap") or 0),
-            "rank": item.get("cmc_rank"),
         })
 
     return coins
 
 
-# =========================
-# BINANCE HOURLY VOLUME
-# =========================
-
-def get_binance_usdt_symbols():
-    """
-    Fetch tradable Binance spot pairs quoted in USDT.
-    Symbols without a matching pair will not receive
-    a fabricated hourly-volume ratio.
-    """
+def get_binance_symbols():
     try:
         response = requests.get(
             BINANCE_EXCHANGE_URL,
             timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
+        data = response.json()
 
-        info = response.json()
-        symbols = set()
-
-        for item in info.get("symbols", []):
-            if (
-                item.get("status") == "TRADING"
-                and item.get("isSpotTradingAllowed", True)
-                and item.get("quoteAsset") == "USDT"
-            ):
-                symbols.add(item["symbol"])
-
-        return symbols
+        return {
+            item["symbol"]
+            for item in data.get("symbols", [])
+            if item.get("status") == "TRADING"
+            and item.get("quoteAsset") == "USDT"
+            and item.get("isSpotTradingAllowed", True)
+        }
 
     except (requests.RequestException, ValueError) as error:
         print(f"Binance exchange info unavailable: {error}")
@@ -242,13 +173,6 @@ def get_binance_usdt_symbols():
 
 
 def get_hourly_volume_ratio(symbol, available_symbols):
-    """
-    Compare the latest completed hourly USDT volume with
-    the average volume of the previous 24 completed hours.
-
-    Binance kline field [7] is quote-asset volume.
-    The currently forming candle is excluded.
-    """
     pair = f"{symbol.upper()}USDT"
 
     if pair not in available_symbols:
@@ -270,17 +194,13 @@ def get_hourly_volume_ratio(symbol, available_symbols):
         if not isinstance(candles, list) or len(candles) < 26:
             return None
 
-        # Exclude the candle that is currently forming.
+        # Remove the currently forming candle.
         completed = candles[:-1]
-
-        if len(completed) < 25:
-            return None
-
         volumes = [float(candle[7]) for candle in completed]
 
-        # 24 completed hours before the latest completed hour.
+        # Last completed hour compared with the previous 24 hours.
+        latest_volume = volumes[-1]
         previous_24 = volumes[-25:-1]
-        latest_hour = volumes[-1]
 
         if len(previous_24) != 24:
             return None
@@ -290,43 +210,26 @@ def get_hourly_volume_ratio(symbol, available_symbols):
         if average_volume <= 0:
             return None
 
-        return latest_hour / average_volume
+        return latest_volume / average_volume
 
-    except (
-        requests.RequestException,
-        ValueError,
-        TypeError,
-        IndexError,
-    ) as error:
-        print(f"Hourly volume unavailable for {pair}: {error}")
+    except (requests.RequestException, ValueError, TypeError, IndexError) as error:
+        print(f"Hourly volume error for {pair}: {error}")
         return None
 
 
-# =========================
-# HISTORY
-# =========================
-
 def load_history():
-    history = load_json(HISTORY_FILE, {})
-
-    if not isinstance(history, dict):
-        return {}
-
-    return history
-
-
-def save_history(history):
-    save_json(HISTORY_FILE, history)
+    data = load_json(HISTORY_FILE, {})
+    return data if isinstance(data, dict) else {}
 
 
 def update_history(history, coin):
     coin_id = coin["id"]
 
-    if coin_id not in history or not isinstance(history[coin_id], list):
+    if not isinstance(history.get(coin_id), list):
         history[coin_id] = []
 
     history[coin_id].append({
-        "time": utc_now(),
+        "time": now_utc(),
         "price": coin["price"],
         "volume": coin["volume_24h"],
     })
@@ -334,15 +237,10 @@ def update_history(history, coin):
     history[coin_id] = history[coin_id][-14:]
 
 
-# =========================
-# SIGNAL ANALYSIS
-# =========================
-
 def analyze_coin(coin, history, volume_ratio, diagnostics):
-    coin_id = coin["id"]
-    previous = history.get(coin_id, [])
+    previous = history.get(coin["id"], [])
 
-    if len(previous) < MIN_HISTORY_POINTS:
+    if not isinstance(previous, list) or len(previous) < MIN_HISTORY_POINTS:
         diagnostics["insufficient_history"] += 1
         return None
 
@@ -369,37 +267,34 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
 
     if volume_ratio >= 2.0:
         score += 30
-        reasons.append("Strong hourly volume spike")
+        reasons.append("Hourly volume at least 2x average")
     elif volume_ratio >= 1.5:
         score += 25
-        reasons.append("Elevated hourly volume")
+        reasons.append("Hourly volume at least 1.5x average")
     elif volume_ratio >= MIN_VOLUME_RATIO:
         score += 15
-        reasons.append("Above-average hourly volume")
+        reasons.append("Hourly volume above threshold")
 
     if abs(coin["change_24h"]) >= 5:
         score += 20
-        reasons.append("Strong 24h price movement")
+        reasons.append("24h price change at least 5%")
     elif abs(coin["change_24h"]) >= MIN_PRICE_CHANGE:
         score += 15
-        reasons.append("Significant 24h price movement")
+        reasons.append("24h price change at least 2%")
 
     old_prices = [
         float(item["price"])
         for item in previous
-        if item.get("price") is not None
+        if isinstance(item, dict) and item.get("price") is not None
     ]
 
     if old_prices:
-        previous_high = max(old_prices)
-        previous_low = min(old_prices)
-
-        if coin["price"] > previous_high:
+        if coin["price"] > max(old_prices):
             score += 30
-            reasons.append("Price above recorded history")
-        elif coin["price"] < previous_low:
+            reasons.append("Price above stored history")
+        elif coin["price"] < min(old_prices):
             score += 30
-            reasons.append("Price below recorded history")
+            reasons.append("Price below stored history")
 
     if score >= 50:
         diagnostics["passed_score"] += 1
@@ -413,13 +308,9 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
 
     diagnostics["passed_all"] += 1
 
-    direction = (
-        "BULLISH" if coin["change_24h"] > 0 else "BEARISH"
-    )
-
     return {
-        "time": utc_now(),
-        "id": coin_id,
+        "time": now_utc(),
+        "id": coin["id"],
         "name": coin["name"],
         "symbol": coin["symbol"],
         "price": coin["price"],
@@ -427,54 +318,49 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
         "hourly_volume_ratio": round(volume_ratio, 4),
         "change_24h": coin["change_24h"],
         "score": score,
-        "direction": direction,
+        "direction": "BULLISH" if coin["change_24h"] > 0 else "BEARISH",
         "reasons": reasons,
     }
 
 
-# =========================
-# REPORT FORMATTING
-# =========================
-
-def format_number(value):
+def format_money(value):
     if value is None:
         return "N/A"
+    return f"${value:,.2f}"
 
-    return f"{value:,.2f}"
 
-
-def market_context_message(sentiment, fear_greed, market):
+def build_market_message(sentiment, fear_greed, market):
     lines = [
-        "🌐 CRYPTO EDGE | MARKET CONTEXT",
+        "CRYPTO EDGE | MARKET CONTEXT",
         "",
         f"Sentiment: {sentiment}",
-        f"Fear & Greed Index: {fear_greed if fear_greed is not None else 'N/A'}",
+        f"Fear & Greed: {fear_greed if fear_greed is not None else 'N/A'}",
     ]
 
     if market:
         lines.extend([
             "",
-            f"Total Market Cap: ${format_number(market.get('market_cap'))}",
-            f"24h Market Volume: ${format_number(market.get('volume_24h'))}",
-            f"BTC Dominance: {format_number(market.get('bitcoin_dominance'))}%",
-            f"Market Cap Change (24h): {format_number(market.get('market_cap_change_24h'))}%",
+            f"Market Cap: {format_money(market.get('market_cap'))}",
+            f"24h Market Volume: {format_money(market.get('volume_24h'))}",
+            f"BTC Dominance: {market.get('btc_dominance', 'N/A')}%",
+            f"Market Cap Change: {market.get('market_change', 'N/A')}%",
         ])
 
     lines.extend([
         "",
-        "Hourly volume is compared against the previous 24 completed hourly candles.",
-        "This report is market analysis, not financial advice.",
+        "Hourly volume compares the latest completed hour with the previous 24 completed hours.",
+        "Screening results are not guaranteed trading signals.",
     ])
 
     return "\n".join(lines)
 
 
-def signal_message(signal):
+def build_signal_message(signal):
     lines = [
-        f"🚨 CRYPTO EDGE | {signal['direction']} SIGNAL",
+        f"CRYPTO EDGE | {signal['direction']} SIGNAL",
         "",
         f"Coin: {signal['name']} ({signal['symbol']})",
-        f"Price: ${signal['price']:,.8f}",
+        f"Price: ${signal['price']:.8f}",
         f"24h Change: {signal['change_24h']:+.2f}%",
         f"24h Volume: ${signal['volume_24h']:,.0f}",
         f"Hourly Volume Ratio: {signal['hourly_volume_ratio']:.2f}x",
@@ -483,19 +369,12 @@ def signal_message(signal):
         "Reasons:",
     ]
 
-    lines.extend(f"• {reason}" for reason in signal["reasons"])
-
-    lines.extend([
-        "",
-        "Signal is a screening result, not a guaranteed trade.",
-    ])
+    lines.extend(f"- {reason}" for reason in signal["reasons"])
+    lines.append("")
+    lines.append("Analysis only, not financial advice.")
 
     return "\n".join(lines)
 
-
-# =========================
-# MAIN
-# =========================
 
 def main():
     print("Starting Crypto Edge Smart Money Radar...")
@@ -505,14 +384,12 @@ def main():
 
     market = get_global_market()
     coins = get_market_data()
-
     history = load_history()
-    available_symbols = get_binance_usdt_symbols()
+    available_symbols = get_binance_symbols()
 
     diagnostics = {
-        "missing_data": 0,
-        "below_min_volume": 0,
         "insufficient_history": 0,
+        "below_min_volume": 0,
         "checked_history": 0,
         "missing_hourly_volume": 0,
         "passed_volume": 0,
@@ -524,49 +401,38 @@ def main():
 
     signals = []
 
-    # Analyze using the existing history first, then append
-    # this run's snapshot so it cannot count as its own past.
     for coin in coins:
         ratio = get_hourly_volume_ratio(
             coin["symbol"],
             available_symbols,
         )
 
-        signal = analyze_coin(
-            coin,
-            history,
-            ratio,
-            diagnostics,
-        )
+        signal = analyze_coin(coin, history, ratio, diagnostics)
 
         if signal:
             signals.append(signal)
 
         update_history(history, coin)
-
-        # Keep API requests spaced out.
         time.sleep(0.05)
 
-    save_history(history)
+    save_json(HISTORY_FILE, history)
 
     signals.sort(key=lambda item: item["score"], reverse=True)
     signals = signals[:MAX_ALERTS]
 
-    # Always maintain the signal log file, even with no signals.
     signal_log = load_json(SIGNAL_LOG_FILE, [])
-
     if not isinstance(signal_log, list):
         signal_log = []
 
     signal_log.extend(signals)
     save_json(SIGNAL_LOG_FILE, signal_log[-1000:])
 
-    ratios = diagnostics["volume_ratios"]
-
     print("Diagnostic report:")
     for key, value in diagnostics.items():
         if key != "volume_ratios":
             print(f"{key}: {value}")
+
+    ratios = diagnostics["volume_ratios"]
 
     if ratios:
         print(f"volume_ratio_min: {min(ratios):.4f}")
@@ -574,33 +440,25 @@ def main():
         print(f"volume_ratio_average: {sum(ratios) / len(ratios):.4f}")
         print(
             "volume_ratio_below_threshold: "
-            f"{sum(1 for ratio in ratios if ratio < MIN_VOLUME_RATIO)}"
+            f"{sum(1 for value in ratios if value < MIN_VOLUME_RATIO)}"
         )
     else:
         print("No hourly volume ratios were available.")
 
-    context_message = market_context_message(
-        sentiment,
-        fear_greed,
-        market,
-    )
-
-    if send_telegram(context_message):
+    if send_telegram(build_market_message(sentiment, fear_greed, market)):
         print("Market Context Report sent successfully.")
     else:
-        print("Failed to send Market Context Report.")
+        print("Market Context Report failed to send.")
 
     if not signals:
         print("No signals met the required criteria.")
         return
 
     for signal in signals:
-        message = signal_message(signal)
-
-        if send_telegram(message):
+        if send_telegram(build_signal_message(signal)):
             print(f"Signal sent: {signal['symbol']}")
         else:
-            print(f"Failed to send signal: {signal['symbol']}")
+            print(f"Signal failed: {signal['symbol']}")
 
 
 if __name__ == "__main__":
@@ -609,4 +467,3 @@ if __name__ == "__main__":
     except Exception as error:
         print(f"Smart Money Radar failed: {error}")
         raise
-```
