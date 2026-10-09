@@ -60,19 +60,19 @@ def save_history(history):
 
 
 def get_sentiment():
-    """Fetch market sentiment without blocking the main scanner."""
     sentiment = {
         "fear_greed": None,
         "label": "UNAVAILABLE",
         "market_cap_change": None,
         "btc_dominance": None,
+        "market_cap": None,
+        "volume_24h": None,
     }
 
     try:
         response = requests.get(FEAR_GREED_URL, timeout=15)
         response.raise_for_status()
         data = response.json()["data"][0]
-
         value = int(data["value"])
 
         if value <= 24:
@@ -89,7 +89,13 @@ def get_sentiment():
         sentiment["fear_greed"] = value
         sentiment["label"] = label
 
-    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as error:
+    except (
+        requests.RequestException,
+        ValueError,
+        KeyError,
+        IndexError,
+        TypeError,
+    ) as error:
         print(f"Fear & Greed unavailable: {error}")
 
     try:
@@ -97,16 +103,23 @@ def get_sentiment():
         response.raise_for_status()
         data = response.json()
 
-        change = data.get("market_cap_change_24h")
-        dominance = data.get("bitcoin_dominance_percentage")
+        fields = {
+            "market_cap_change": "market_cap_change_24h",
+            "btc_dominance": "bitcoin_dominance_percentage",
+            "market_cap": "market_cap_usd",
+            "volume_24h": "volume_24h_usd",
+        }
 
-        if change is not None:
-            sentiment["market_cap_change"] = float(change)
+        for key, source_key in fields.items():
+            value = data.get(source_key)
+            if value is not None:
+                sentiment[key] = float(value)
 
-        if dominance is not None:
-            sentiment["btc_dominance"] = float(dominance)
-
-    except (requests.RequestException, ValueError, TypeError) as error:
+    except (
+        requests.RequestException,
+        ValueError,
+        TypeError,
+    ) as error:
         print(f"Global market data unavailable: {error}")
 
     return sentiment
@@ -131,7 +144,6 @@ def get_market_data():
 
     response.raise_for_status()
     result = response.json()
-
     status = result.get("status", {})
 
     if status.get("error_code", 0) != 0:
@@ -183,7 +195,6 @@ def analyze_coin(coin, history, now):
 
         if average_volume > 0:
             volume_ratio = volume / average_volume
-
             previous_high = max(old_prices) if old_prices else price
             previous_low = min(old_prices) if old_prices else price
 
@@ -251,53 +262,83 @@ def analyze_coin(coin, history, now):
     })
 
     history[coin_id] = previous[-14:]
-
     return alert
 
 
-def build_message(alerts, sentiment):
+def build_market_report(sentiment, scanned, bullish, bearish, total_alerts):
     lines = [
         "⚡ CRYPTO EDGE",
         "━━━━━━━━━━━━━━━━━━",
-        "🛰 SMART MONEY RADAR",
-        "📊 MARKET ACTIVITY SCANNER",
+        "🌍 MARKET CONTEXT REPORT",
+        f"🕒 Updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
         "",
-        "Source: CoinMarketCap",
-        "Signals use saved market snapshots.",
-        "",
-        "🧠 MARKET SENTIMENT",
+        "🧠 FEAR & GREED",
     ]
 
     if sentiment["fear_greed"] is not None:
         lines.append(
-            f"😨 Fear & Greed: {sentiment['fear_greed']}/100 "
-            f"({sentiment['label']})"
+            f"📊 Index: {sentiment['fear_greed']}/100 | "
+            f"{sentiment['label']}"
         )
     else:
-        lines.append("😨 Fear & Greed: Unavailable")
-
-    if sentiment["market_cap_change"] is not None:
-        change = sentiment["market_cap_change"]
-        emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
-        lines.append(
-            f"🌍 Global Market Cap Change (24H): {emoji} {change:+.2f}%"
-        )
-    else:
-        lines.append("🌍 Global Market Cap Change (24H): N/A")
-
-    if sentiment["btc_dominance"] is not None:
-        lines.append(
-            f"₿ Bitcoin Dominance: {sentiment['btc_dominance']:.2f}%"
-        )
-    else:
-        lines.append("₿ Bitcoin Dominance: N/A")
+        lines.append("📊 Index: Unavailable")
 
     lines.extend([
         "",
-        "Sentiment is context, not a trade signal.",
-        "━━━━━━━━━━━━━━━━━━",
-        "",
+        "🌐 GLOBAL MARKET",
+        f"💎 Market Cap: {money(sentiment['market_cap'])}",
+        f"💰 24H Volume: {money(sentiment['volume_24h'])}",
     ])
+
+    change = sentiment["market_cap_change"]
+    if change is not None:
+        emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
+        lines.append(f"📈 Market Cap Change (24H): {emoji} {change:+.2f}%")
+    else:
+        lines.append("📈 Market Cap Change (24H): N/A")
+
+    dominance = sentiment["btc_dominance"]
+    if dominance is not None:
+        lines.append(f"₿ BTC Dominance: {dominance:.2f}%")
+    else:
+        lines.append("₿ BTC Dominance: N/A")
+
+    lines.extend([
+        "",
+        "🛰 SMART MONEY SCAN",
+        f"🔍 Assets scanned: {scanned}",
+        f"🚀 Bullish alerts: {bullish}",
+        f"🔻 Bearish alerts: {bearish}",
+        f"📌 Total alerts sent: {total_alerts}",
+        "",
+        "⚠️ Market context is not a buy/sell signal.",
+        "⚠️ Volume snapshots overlap across the 24h window.",
+        "⚠️ This scanner does not confirm institutional money flows.",
+        "🎯 DATA OVER HYPE",
+        "⚡ STAY AHEAD",
+    ])
+
+    return "\n".join(lines)
+
+
+def build_alert_message(alerts, sentiment):
+    lines = [
+        "⚡ CRYPTO EDGE",
+        "━━━━━━━━━━━━━━━━━━",
+        "🛰 SMART MONEY RADAR",
+        "Source: CoinMarketCap",
+        "",
+    ]
+
+    if sentiment["fear_greed"] is not None:
+        lines.append(
+            f"🧠 Market Sentiment: {sentiment['label']} "
+            f"({sentiment['fear_greed']}/100)"
+        )
+    else:
+        lines.append("🧠 Market Sentiment: Unavailable")
+
+    lines.append("")
 
     for item in alerts:
         if item["breakout_up"]:
@@ -327,11 +368,8 @@ def build_message(alerts, sentiment):
     lines.extend([
         "━━━━━━━━━━━━━━━━━━",
         "ℹ️ Score measures observed conditions, not probability.",
-        "⚠️ Volume snapshots overlap across the 24h window.",
-        "⚠️ This does not confirm institutional money flows.",
         "⚠️ Not a guaranteed trading signal.",
         "🎯 DATA OVER HYPE",
-        "⚡ STAY AHEAD",
     ])
 
     return "\n".join(lines)
@@ -352,8 +390,7 @@ def send_telegram(message):
 
     if not result.get("ok"):
         raise RuntimeError(
-            "Telegram rejected the message: "
-            + str(result)
+            "Telegram rejected the message: " + str(result)
         )
 
 
@@ -363,8 +400,8 @@ def main():
     history = load_history()
     coins = get_market_data()
     now = datetime.now(timezone.utc).isoformat()
-
     sentiment = get_sentiment()
+
     print(
         "Sentiment:",
         sentiment["label"],
@@ -376,27 +413,33 @@ def main():
 
     for coin in coins:
         alert = analyze_coin(coin, history, now)
-
         if alert is not None:
             alerts.append(alert)
 
-    # Save market snapshots even if no alerts are found.
     save_history(history)
 
-    alerts.sort(
-        key=lambda item: item["score"],
-        reverse=True,
-    )
+    alerts.sort(key=lambda item: item["score"], reverse=True)
     alerts = alerts[:MAX_ALERTS]
 
-    print(f"Processed {len(coins)} assets.")
+    bullish = sum(1 for item in alerts if item["change"] > 0)
+    bearish = sum(1 for item in alerts if item["change"] < 0)
 
-    if not alerts:
+    # Always send the market report, even when there are no signals.
+    report = build_market_report(
+        sentiment,
+        len(coins),
+        bullish,
+        bearish,
+        len(alerts),
+    )
+    send_telegram(report)
+    print("Market Context Report sent successfully.")
+
+    if alerts:
+        send_telegram(build_alert_message(alerts, sentiment))
+        print(f"Sent {len(alerts)} Smart Money Radar alerts.")
+    else:
         print("No signals met the required criteria.")
-        return
-
-    send_telegram(build_message(alerts, sentiment))
-    print(f"Sent {len(alerts)} Smart Money Radar alerts.")
 
 
 if __name__ == "__main__":
