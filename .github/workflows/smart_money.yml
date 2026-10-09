@@ -1,1 +1,23 @@
 
+name: Crypto Edge Smart Money Radar
+
+'on':
+  workflow_dispatch:
+  schedule:
+    - cron: "15 */4 * * *"
+
+jobs:
+  smart-money:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Requests
+        run: pip install requests
+
+      - name: Run Smart Money Radar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python smart_money.py
