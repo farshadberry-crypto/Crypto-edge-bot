@@ -6,6 +6,9 @@ name: Crypto Edge Smart Money Radar
   schedule:
     - cron: "15 */4 * * *"
 
+permissions:
+  contents: write
+
 jobs:
   smart-money:
     runs-on: ubuntu-latest
@@ -20,4 +23,17 @@ jobs:
       - name: Run Smart Money Radar
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
         run: python smart_money.py
+
+      - name: Save Smart Money History
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add smart_money_history.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update smart money history"
+            git push
+          else
+            echo "Smart money history unchanged."
+          fi
