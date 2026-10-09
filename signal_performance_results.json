@@ -1,0 +1,9 @@
+[
+  {
+    "updated_at": "2026-10-09T22:59:07.390246+00:00",
+    "signals_checked": 0,
+    "checkpoints_recorded": 0,
+    "status": "waiting_for_signals",
+    "note": "No signals have been recorded by smart_money.py yet."
+  }
+]
