@@ -16,6 +16,7 @@ def format_price(value):
         return f"${value:,.2f}"
     if value >= 1:
         return f"${value:,.3f}"
+
     return "$" + f"{value:.8f}".rstrip("0").rstrip(".")
 
 
@@ -35,7 +36,7 @@ def format_volume(value):
 
 
 def main():
-    print("📡 Fetching cryptocurrency market data...")
+    print("📡 Fetching market data...")
 
     response = requests.get(
         API_URL,
@@ -98,13 +99,13 @@ def main():
         "━━━━━━━━━━━━━━━━━━\n\n"
         + "\n\n".join(lines)
         + "\n\n━━━━━━━━━━━━━━━━━━\n"
-        "📈 Market Data: CoinPaprika\n"
-        "🕒 Price Changes: 24 Hours\n"
+        "📊 LIVE MARKET DATA\n"
+        "🕒 PRICE CHANGES: 24 HOURS\n"
         "🎯 DATA OVER HYPE\n"
         "⚡ STAY AHEAD"
     )
 
-    print("📨 Sending market report to Telegram...")
+    print("📨 Sending market report...")
 
     result = requests.post(
         TELEGRAM_URL,
@@ -114,7 +115,6 @@ def main():
         },
         timeout=30,
     )
-
     result.raise_for_status()
 
     if not result.json().get("ok"):
