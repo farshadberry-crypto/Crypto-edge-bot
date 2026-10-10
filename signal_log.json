@@ -176,5 +176,64 @@
     ],
     "results": {},
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T00:43:49.244210+00:00",
+    "price_time": "2026-10-10T00:43:49.244210+00:00",
+    "id": "6636",
+    "name": "Polkadot",
+    "symbol": "DOT",
+    "price": 1.2351649490109418,
+    "volume_24h": 236472885.87910193,
+    "hourly_volume_ratio": 1.5776,
+    "change_24h": 9.59951104,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T00:43:49.244210+00:00",
+    "price_time": "2026-10-10T00:43:49.244210+00:00",
+    "id": "3794",
+    "name": "Cosmos",
+    "symbol": "ATOM",
+    "price": 2.0446817296540023,
+    "volume_24h": 215191079.3017165,
+    "hourly_volume_ratio": 1.5465,
+    "change_24h": 14.87968182,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T00:43:49.244210+00:00",
+    "price_time": "2026-10-10T00:43:49.244210+00:00",
+    "id": "21794",
+    "name": "Aptos",
+    "symbol": "APT",
+    "price": 0.8189038741690944,
+    "volume_24h": 131815507.90348323,
+    "hourly_volume_ratio": 2.4856,
+    "change_24h": 11.17821039,
+    "score": 50,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
