@@ -967,5 +967,105 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T20:30:32.693990+00:00",
+    "price_time": "2026-10-10T20:30:32.693990+00:00",
+    "id": "36645",
+    "name": "Plasma",
+    "symbol": "XPL",
+    "price": 0.08779600940014583,
+    "volume_24h": 55592914.60752214,
+    "hourly_volume_ratio": 3.5974,
+    "change_24h": 5.43378784,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T20:30:32.693990+00:00",
+    "price_time": "2026-10-10T20:30:32.693990+00:00",
+    "id": "32684",
+    "name": "Sonic",
+    "symbol": "S",
+    "price": 0.0463964551890402,
+    "volume_24h": 20207571.94734051,
+    "hourly_volume_ratio": 6.6742,
+    "change_24h": 4.51899959,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T20:30:32.693990+00:00",
+    "price_time": "2026-10-10T20:30:32.693990+00:00",
+    "id": "6841",
+    "name": "Phala Network",
+    "symbol": "PHA",
+    "price": 0.060016579200115626,
+    "volume_24h": 15055992.26494491,
+    "hourly_volume_ratio": 6.5336,
+    "change_24h": 2.02834967,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T20:30:32.693990+00:00",
+    "price_time": "2026-10-10T20:30:32.693990+00:00",
+    "id": "38770",
+    "name": "MegaETH",
+    "symbol": "MEGA",
+    "price": 0.04342172544074308,
+    "volume_24h": 6972185.28534052,
+    "hourly_volume_ratio": 1.4439,
+    "change_24h": 6.57445935,
+    "score": 65,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T20:30:32.693990+00:00",
+    "price_time": "2026-10-10T20:30:32.693990+00:00",
+    "id": "1214",
+    "name": "Lisk",
+    "symbol": "LSK",
+    "price": 0.24199474467016588,
+    "volume_24h": 8572482.85845,
+    "hourly_volume_ratio": 1.3076,
+    "change_24h": 2.68391367,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
