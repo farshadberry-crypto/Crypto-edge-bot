@@ -14,7 +14,8 @@
       "Kraken hourly volume is at least 2x its previous 24h hourly average",
       "24h price change is at least 2%",
       "Price is below recorded history"
-    ]
+    ],
+    "results": {}
   },
   {
     "time": "2026-10-09T23:42:07.064510+00:00",
@@ -31,7 +32,8 @@
       "Kraken hourly volume exceeds the threshold",
       "24h price change is at least 5%",
       "Price is above recorded history"
-    ]
+    ],
+    "results": {}
   },
   {
     "time": "2026-10-09T23:42:03.700378+00:00",
@@ -48,7 +50,8 @@
       "Kraken hourly volume exceeds the threshold",
       "24h price change is at least 2%",
       "Price is above recorded history"
-    ]
+    ],
+    "results": {}
   },
   {
     "time": "2026-10-09T23:42:11.290351+00:00",
@@ -64,6 +67,7 @@
     "reasons": [
       "Kraken hourly volume is at least 2x its previous 24h hourly average",
       "24h price change is at least 5%"
-    ]
+    ],
+    "results": {}
   }
 ]
