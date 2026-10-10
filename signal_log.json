@@ -137,5 +137,44 @@
       "24h price change is at least 2%",
       "Price is above recorded history"
     ]
+  },
+  {
+    "time": "2026-10-10T00:38:50.521071+00:00",
+    "price_time": "2026-10-10T00:38:50.521071+00:00",
+    "id": "3635",
+    "name": "Cronos",
+    "symbol": "CRO",
+    "price": 0.061894395375113695,
+    "volume_24h": 6462087.28258334,
+    "hourly_volume_ratio": 1.4074,
+    "change_24h": 2.58521155,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T00:38:50.521071+00:00",
+    "price_time": "2026-10-10T00:38:50.521071+00:00",
+    "id": "21794",
+    "name": "Aptos",
+    "symbol": "APT",
+    "price": 0.8177594983792612,
+    "volume_24h": 131676250.25099781,
+    "hourly_volume_ratio": 2.4856,
+    "change_24h": 11.24944768,
+    "score": 50,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
