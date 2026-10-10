@@ -26,6 +26,17 @@
         "directional_change_pct": 1.4241,
         "direction": "BEARISH",
         "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.011,
+        "checked_at": "2026-10-10T03:42:28.339322+00:00",
+        "entry_price": 523.7291172815155,
+        "price": 519.3921197778222,
+        "price_change_pct": -0.8281,
+        "directional_change_pct": 0.8281,
+        "direction": "BEARISH",
+        "evaluation_version": 2
       }
     }
   },
@@ -54,6 +65,17 @@
         "price": 0.11694560318765986,
         "price_change_pct": 0.3313,
         "directional_change_pct": 0.3313,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.006,
+        "checked_at": "2026-10-10T03:42:28.339355+00:00",
+        "entry_price": 0.11655943085609921,
+        "price": 0.1135196186213433,
+        "price_change_pct": -2.608,
+        "directional_change_pct": -2.608,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
@@ -86,6 +108,17 @@
         "directional_change_pct": 0.0134,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.007,
+        "checked_at": "2026-10-10T03:42:28.339363+00:00",
+        "entry_price": 4.089845484693173,
+        "price": 4.169248550544744,
+        "price_change_pct": 1.9415,
+        "directional_change_pct": 1.9415,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     }
   },
@@ -113,6 +146,17 @@
         "price": 0.14399360825203883,
         "price_change_pct": 2.0795,
         "directional_change_pct": 2.0795,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.005,
+        "checked_at": "2026-10-10T03:42:28.339369+00:00",
+        "entry_price": 0.1410603227443193,
+        "price": 0.14611085076148025,
+        "price_change_pct": 3.5804,
+        "directional_change_pct": 3.5804,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
