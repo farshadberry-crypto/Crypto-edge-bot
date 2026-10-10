@@ -318,7 +318,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.961,
+        "checked_at": "2026-10-10T02:41:28.597059+00:00",
+        "entry_price": 1.2351649490109418,
+        "price": 1.2765267908171993,
+        "price_change_pct": 3.3487,
+        "directional_change_pct": 3.3487,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -338,7 +350,19 @@
       "24h price change is at least 5%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.961,
+        "checked_at": "2026-10-10T02:41:28.597092+00:00",
+        "entry_price": 2.0446817296540023,
+        "price": 2.0258914736059594,
+        "price_change_pct": -0.919,
+        "directional_change_pct": -0.919,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -357,7 +381,19 @@
       "Kraken hourly volume is at least 2x its previous 24h hourly average",
       "24h price change is at least 5%"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.961,
+        "checked_at": "2026-10-10T02:41:28.597099+00:00",
+        "entry_price": 0.8189038741690944,
+        "price": 0.83365755430441,
+        "price_change_pct": 1.8016,
+        "directional_change_pct": 1.8016,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
