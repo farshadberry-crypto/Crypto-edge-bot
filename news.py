@@ -18,16 +18,13 @@ TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = "@cryptoedgeAlerts"
 
 STATE_FILE = ".crypto_edge_seen.json"
-MAX_SEEN = 1000
+
+MAX_SEEN = 2000
 MAX_NEWS_PER_RUN = 10
 
-TELEGRAM_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+RSS_URL = "https://cointelegraph.com/rss"
 
-# Only two selected news sources
-RSS_FEEDS = [
-    ("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
-    ("Cointelegraph", "https://cointelegraph.com/rss"),
-]
+TELEGRAM_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 CryptoEdgeNewsBot/1.0",
@@ -61,6 +58,7 @@ def make_id(link, title):
         if link
         else normalize_title(title)
     )
+
     return hashlib.sha256(
         identity.encode("utf-8")
     ).hexdigest()
@@ -68,13 +66,16 @@ def make_id(link, title):
 
 def load_history():
     if not os.path.exists(STATE_FILE):
-        return set(), True
+        return set(), set(), True
 
     try:
         with open(STATE_FILE, "r", encoding="utf-8") as file:
             data = json.load(file)
 
-        return set(data.get("seen_ids", [])), False
+        seen_ids = set(data.get("seen_ids", []))
+        seen_titles = set(data.get("seen_titles", []))
+
+        return seen_ids, seen_titles, False
 
     except (json.JSONDecodeError, OSError) as error:
         raise RuntimeError(
@@ -82,12 +83,17 @@ def load_history():
         )
 
 
-def save_history(seen_ids):
+def save_history(seen_ids, seen_titles):
+    data = {
+        "seen_ids": list(seen_ids)[-MAX_SEEN:],
+        "seen_titles": list(seen_titles)[-MAX_SEEN:],
+    }
+
     temporary_file = STATE_FILE + ".tmp"
 
     with open(temporary_file, "w", encoding="utf-8") as file:
         json.dump(
-            {"seen_ids": list(seen_ids)[-MAX_SEEN:]},
+            data,
             file,
             ensure_ascii=False,
             indent=2,
@@ -100,15 +106,14 @@ def save_history(seen_ids):
 # FETCH NEWS
 # =========================
 
-def fetch_feed(source, feed_url):
-    response = session.get(feed_url, timeout=20)
+def fetch_news():
+    response = session.get(RSS_URL, timeout=25)
     response.raise_for_status()
 
     root = ET.fromstring(response.content)
 
     items = root.findall(".//item")
 
-    # Support Atom feeds too
     if not items:
         items = root.findall(
             ".//{http://www.w3.org/2005/Atom}entry"
@@ -117,27 +122,28 @@ def fetch_feed(source, feed_url):
     stories = []
 
     for item in items:
-        title = clean_text(
-            item.findtext("title")
-            or item.findtext(
+        title_element = item.find("title")
+
+        if title_element is None:
+            title_element = item.find(
                 "{http://www.w3.org/2005/Atom}title"
             )
+
+        title = clean_text(
+            "".join(title_element.itertext())
+            if title_element is not None
+            else ""
         )
 
-        link = (
-            item.findtext("link")
-            or item.findtext(
-                "{http://www.w3.org/2005/Atom}link"
-            )
-            or ""
-        ).strip()
+        link = item.findtext("link") or ""
 
         if not link:
             atom_link = item.find(
                 "{http://www.w3.org/2005/Atom}link"
             )
+
             if atom_link is not None:
-                link = atom_link.attrib.get("href", "").strip()
+                link = atom_link.attrib.get("href", "")
 
         if not title:
             continue
@@ -148,7 +154,8 @@ def fetch_feed(source, feed_url):
             "normalized_title": normalize_title(title),
         })
 
-    print(f"{source}: {len(stories)} stories fetched")
+    print(f"Cointelegraph: {len(stories)} stories fetched")
+
     return stories
 
 
@@ -157,7 +164,6 @@ def fetch_feed(source, feed_url):
 # =========================
 
 def send_news(story):
-    # Show only the headline, never the source or article URL.
     message = (
         "⚡ CRYPTO EDGE\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
@@ -176,7 +182,7 @@ def send_news(story):
                 "text": message,
                 "disable_web_page_preview": "true",
             },
-            timeout=20,
+            timeout=25,
         )
 
         if response.status_code == 429:
@@ -191,28 +197,30 @@ def send_news(story):
 
             if attempt < 4:
                 wait_seconds = max(retry_after, 1) + 1
+
                 print(
                     f"Telegram rate limit. "
                     f"Retrying in {wait_seconds} seconds..."
                 )
+
                 time.sleep(wait_seconds)
                 continue
-
-            response.raise_for_status()
 
         response.raise_for_status()
 
         result = response.json()
+
         if not result.get("ok"):
             raise RuntimeError(
                 "Telegram rejected the news message."
             )
 
-        # Small delay between successful messages
         time.sleep(2)
         return
 
-    raise RuntimeError("Could not send news after retries.")
+    raise RuntimeError(
+        "Could not send news after retries."
+    )
 
 
 # =========================
@@ -222,68 +230,82 @@ def send_news(story):
 def main():
     print("Starting Crypto Edge News...")
 
-    seen_ids, first_run = load_history()
+    seen_ids, seen_titles, first_run = load_history()
 
-    all_stories = []
-    successful_feeds = 0
+    # Fetch before changing history.
+    # If the feed fails, preserve the existing history.
+    stories = fetch_news()
 
-    for source, feed_url in RSS_FEEDS:
-        try:
-            stories = fetch_feed(source, feed_url)
-            all_stories.extend(stories)
-            successful_feeds += 1
-
-        except (
-            requests.RequestException,
-            ET.ParseError,
-            ValueError,
-        ) as error:
-            print(f"{source} feed failed: {error}")
-
-    if successful_feeds == 0:
+    if not stories:
         raise RuntimeError(
-            "All news feeds failed. History was not changed."
+            "Cointelegraph returned no stories. "
+            "History was not changed."
         )
 
-    # On first run, register current headlines without posting old news.
+    # First run: record existing stories without sending old news.
     if first_run:
         initial_ids = {
-            story["id"] for story in all_stories
+            story["id"] for story in stories
         }
-        save_history(initial_ids)
-        print("News history initialized. No old stories sent.")
+
+        initial_titles = {
+            story["normalized_title"]
+            for story in stories
+            if story["normalized_title"]
+        }
+
+        save_history(initial_ids, initial_titles)
+
+        print(
+            "News history initialized. "
+            "Existing stories were not sent."
+        )
         return
 
     unique_stories = []
     run_ids = set()
     run_titles = set()
 
-    for story in all_stories:
-        if story["id"] in seen_ids:
-            continue
-
+    for story in stories:
+        story_id = story["id"]
         title_key = story["normalized_title"]
 
-        if title_key and title_key in run_titles:
+        if story_id in seen_ids:
             continue
 
-        run_ids.add(story["id"])
+        if title_key and (
+            title_key in seen_titles
+            or title_key in run_titles
+        ):
+            continue
+
+        if story_id in run_ids:
+            continue
+
+        run_ids.add(story_id)
 
         if title_key:
             run_titles.add(title_key)
 
         unique_stories.append(story)
 
-    # RSS usually lists newest first. Send older new stories first.
+    # RSS generally lists newest first.
+    # Send older unseen stories first.
     new_stories = list(reversed(unique_stories))
     new_stories = new_stories[-MAX_NEWS_PER_RUN:]
 
-    sent_ids = []
+    sent_ids = set()
+    sent_titles = set()
 
     for story in new_stories:
         try:
             send_news(story)
-            sent_ids.append(story["id"])
+
+            sent_ids.add(story["id"])
+
+            if story["normalized_title"]:
+                sent_titles.add(story["normalized_title"])
+
             print(f"Sent news: {story['title']}")
 
         except (
@@ -293,13 +315,14 @@ def main():
             print(f"News delivery failed: {error}")
             break
 
-    # Save successfully sent stories only.
+    # Save only successfully delivered stories.
     seen_ids.update(sent_ids)
-    save_history(seen_ids)
+    seen_titles.update(sent_titles)
+
+    save_history(seen_ids, seen_titles)
 
     print(
-        f"Finished. Working feeds: "
-        f"{successful_feeds}/{len(RSS_FEEDS)}. "
+        f"Finished. Stories fetched: {len(stories)}. "
         f"Stories sent: {len(sent_ids)}."
     )
 
