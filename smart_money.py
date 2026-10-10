@@ -4,7 +4,7 @@ import json
 import time
 import requests
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 
 # =========================
@@ -33,6 +33,9 @@ MIN_HISTORY_POINTS = 3
 MIN_VOLUME_RATIO = 1.25
 MIN_PRICE_CHANGE = 2.0
 
+HISTORY_HOURS = 24
+MAX_HISTORY_POINTS = 200
+
 REQUEST_TIMEOUT = 20
 REQUEST_DELAY = 0.35
 
@@ -45,6 +48,24 @@ def now_utc():
     return datetime.now(timezone.utc)
 
 
+def parse_timestamp(value):
+    if not value:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(
+            str(value).replace("Z", "+00:00")
+        )
+
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+
+        return parsed.astimezone(timezone.utc)
+
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
 def load_json(filename, default):
     try:
         with open(filename, "r", encoding="utf-8") as file:
@@ -54,8 +75,12 @@ def load_json(filename, default):
 
 
 def save_json(filename, data):
-    with open(filename, "w", encoding="utf-8") as file:
+    temporary_file = filename + ".tmp"
+
+    with open(temporary_file, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
+
+    os.replace(temporary_file, filename)
 
 
 def get_json(url, params=None, headers=None):
@@ -178,6 +203,8 @@ def get_market_data():
             "CoinMarketCap did not return market data."
         )
 
+    # Snapshot timestamp: when the CMC response was received.
+    price_snapshot_time = now_utc().isoformat()
     coins = []
 
     for item in payload["data"]:
@@ -190,16 +217,26 @@ def get_market_data():
         if price is None or volume is None or change is None:
             continue
 
+        try:
+            price = float(price)
+            volume = float(volume)
+            change = float(change)
+            market_cap = float(quote.get("market_cap") or 0)
+        except (ValueError, TypeError):
+            continue
+
+        if price <= 0 or volume < 0:
+            continue
+
         coins.append({
             "id": str(item["id"]),
             "name": item["name"],
             "symbol": item["symbol"].upper(),
-            "price": float(price),
-            "volume_24h": float(volume),
-            "change_24h": float(change),
-            "market_cap": float(
-                quote.get("market_cap") or 0
-            ),
+            "price": price,
+            "price_time": price_snapshot_time,
+            "volume_24h": volume,
+            "change_24h": change,
+            "market_cap": market_cap,
         })
 
     return coins
@@ -221,15 +258,8 @@ def normalize_symbol(symbol):
 
 
 def get_kraken_usd_pairs():
-    """
-    Return a mapping from normalized coin symbol to a
-    Kraken USD spot pair. No API key is required.
-    """
-
     try:
-        data = get_json(
-            f"{KRAKEN_API}/AssetPairs"
-        )
+        data = get_json(f"{KRAKEN_API}/AssetPairs")
 
         errors = data.get("error", [])
 
@@ -240,7 +270,7 @@ def get_kraken_usd_pairs():
         result = data.get("result", {})
         pairs = {}
 
-        for pair_key, item in result.items():
+        for _, item in result.items():
             if item.get("status") != "online":
                 continue
 
@@ -257,16 +287,10 @@ def get_kraken_usd_pairs():
             symbol = normalize_symbol(base)
             altname = item.get("altname")
 
-            if not altname:
-                continue
-
-            if symbol not in pairs:
+            if altname and symbol not in pairs:
                 pairs[symbol] = altname
 
-        print(
-            f"Kraken USD pairs available: {len(pairs)}"
-        )
-
+        print(f"Kraken USD pairs available: {len(pairs)}")
         return pairs
 
     except (
@@ -283,15 +307,14 @@ def get_hourly_volume_ratio(symbol, available_pairs):
     Compare the latest completed hourly USD-volume estimate
     against the average of the preceding 24 completed hours.
 
-    Estimated USD volume = base-asset volume * candle VWAP.
+    Estimate = base volume * candle VWAP.
     The currently forming candle is excluded.
     """
 
     if available_pairs is None:
         return None
 
-    symbol = normalize_symbol(symbol)
-    pair = available_pairs.get(symbol)
+    pair = available_pairs.get(normalize_symbol(symbol))
 
     if not pair:
         return None
@@ -308,15 +331,12 @@ def get_hourly_volume_ratio(symbol, available_pairs):
         errors = data.get("error", [])
 
         if errors:
-            print(
-                f"Kraken OHLC error for {symbol}: {errors}"
-            )
+            print(f"Kraken OHLC error for {symbol}: {errors}")
             return None
 
         result = data.get("result", {})
         candle_keys = [
-            key for key in result
-            if key != "last"
+            key for key in result if key != "last"
         ]
 
         if not candle_keys:
@@ -354,7 +374,6 @@ def get_hourly_volume_ratio(symbol, available_pairs):
 
         previous_24 = usd_volumes[:-1]
         latest_hour = usd_volumes[-1]
-
         average_volume = sum(previous_24) / len(previous_24)
 
         if average_volume <= 0:
@@ -368,10 +387,7 @@ def get_hourly_volume_ratio(symbol, available_pairs):
             if error.response is not None
             else "unknown"
         )
-
-        print(
-            f"Kraken HTTP error for {symbol}: {status}"
-        )
+        print(f"Kraken HTTP error for {symbol}: {status}")
         return None
 
     except (
@@ -381,9 +397,7 @@ def get_hourly_volume_ratio(symbol, available_pairs):
         KeyError,
         IndexError,
     ) as error:
-        print(
-            f"Kraken candle error for {symbol}: {error}"
-        )
+        print(f"Kraken candle error for {symbol}: {error}")
         return None
 
 
@@ -396,19 +410,92 @@ def load_history():
     return data if isinstance(data, dict) else {}
 
 
+def get_recent_history(history, coin_id, reference_time):
+    records = history.get(coin_id, [])
+
+    if not isinstance(records, list):
+        return []
+
+    cutoff = reference_time - timedelta(hours=HISTORY_HOURS)
+    recent = []
+
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+
+        timestamp = parse_timestamp(item.get("time"))
+        price = item.get("price")
+
+        if timestamp is None or price is None:
+            continue
+
+        try:
+            price = float(price)
+        except (ValueError, TypeError):
+            continue
+
+        if price <= 0:
+            continue
+
+        if cutoff <= timestamp < reference_time:
+            recent.append({
+                "time": timestamp,
+                "price": price,
+            })
+
+    recent.sort(key=lambda item: item["time"])
+    return recent
+
+
 def update_history(history, coin):
     coin_id = coin["id"]
+    records = history.get(coin_id, [])
 
-    if not isinstance(history.get(coin_id), list):
-        history[coin_id] = []
+    if not isinstance(records, list):
+        records = []
 
-    history[coin_id].append({
-        "time": now_utc().isoformat(),
-        "price": coin["price"],
-        "volume": coin["volume_24h"],
-    })
+    snapshot_time = (
+        parse_timestamp(coin.get("price_time"))
+        or now_utc()
+    )
 
-    history[coin_id] = history[coin_id][-14:]
+    # Avoid duplicate records for the same timestamp.
+    if not any(
+        isinstance(item, dict)
+        and item.get("time") == snapshot_time.isoformat()
+        for item in records
+    ):
+        records.append({
+            "time": snapshot_time.isoformat(),
+            "price": coin["price"],
+            "volume": coin["volume_24h"],
+        })
+
+    valid_records = []
+
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+
+        timestamp = parse_timestamp(item.get("time"))
+
+        try:
+            price = float(item.get("price"))
+        except (ValueError, TypeError):
+            continue
+
+        if timestamp is None or price <= 0:
+            continue
+
+        item["time"] = timestamp.isoformat()
+        item["price"] = price
+        valid_records.append(item)
+
+    valid_records.sort(
+        key=lambda item: parse_timestamp(item["time"])
+    )
+
+    history[coin_id] = valid_records[-MAX_HISTORY_POINTS:]
 
 
 # =========================
@@ -416,12 +503,18 @@ def update_history(history, coin):
 # =========================
 
 def analyze_coin(coin, history, volume_ratio, diagnostics):
-    previous = history.get(coin["id"], [])
+    reference_time = (
+        parse_timestamp(coin.get("price_time"))
+        or now_utc()
+    )
 
-    if (
-        not isinstance(previous, list)
-        or len(previous) < MIN_HISTORY_POINTS
-    ):
+    previous = get_recent_history(
+        history,
+        coin["id"],
+        reference_time,
+    )
+
+    if len(previous) < MIN_HISTORY_POINTS:
         diagnostics["insufficient_history"] += 1
         return None
 
@@ -469,22 +562,20 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
         score += 15
         reasons.append("24h price change is at least 2%")
 
-    old_prices = [
-        float(item["price"])
-        for item in previous
-        if (
-            isinstance(item, dict)
-            and item.get("price") is not None
-        )
-    ]
+    old_prices = [item["price"] for item in previous]
 
+    # Breakout checks use only observations from the previous 24 hours.
     if old_prices:
         if coin["price"] > max(old_prices):
             score += 30
-            reasons.append("Price is above recorded history")
+            reasons.append(
+                "Price is above recorded prices from the previous 24 hours"
+            )
         elif coin["price"] < min(old_prices):
             score += 30
-            reasons.append("Price is below recorded history")
+            reasons.append(
+                "Price is below recorded prices from the previous 24 hours"
+            )
 
     if score >= 50:
         diagnostics["passed_score"] += 1
@@ -499,7 +590,8 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
     diagnostics["passed_all"] += 1
 
     return {
-        "time": now_utc().isoformat(),
+        "time": reference_time.isoformat(),
+        "price_time": reference_time.isoformat(),
         "id": coin["id"],
         "name": coin["name"],
         "symbol": coin["symbol"],
@@ -514,6 +606,8 @@ def analyze_coin(coin, history, volume_ratio, diagnostics):
             else "BEARISH"
         ),
         "reasons": reasons,
+        "results": {},
+        "evaluation_version": 2,
     }
 
 
@@ -525,7 +619,10 @@ def format_money(value):
     if value is None:
         return "N/A"
 
-    return f"${value:,.2f}"
+    try:
+        return f"${float(value):,.2f}"
+    except (ValueError, TypeError):
+        return "N/A"
 
 
 def build_market_message(sentiment, fear_greed, market):
@@ -675,7 +772,11 @@ def main():
 
         if (
             isinstance(previous, list)
-            and len(previous) >= MIN_HISTORY_POINTS
+            and len(get_recent_history(
+                history,
+                coin["id"],
+                parse_timestamp(coin["price_time"]) or now_utc(),
+            )) >= MIN_HISTORY_POINTS
             and coin["volume_24h"] >= MIN_VOLUME_USD
         ):
             ratio = get_hourly_volume_ratio(
