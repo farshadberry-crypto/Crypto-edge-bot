@@ -1,9 +1,10 @@
+
 import os
 import json
 import time
 import requests
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 
 # =========================
@@ -254,13 +255,11 @@ def get_kraken_usd_pairs():
                 continue
 
             symbol = normalize_symbol(base)
-
             altname = item.get("altname")
 
             if not altname:
                 continue
 
-            # Keep one available USD pair per normalized symbol.
             if symbol not in pairs:
                 pairs[symbol] = altname
 
@@ -283,9 +282,6 @@ def get_hourly_volume_ratio(symbol, available_pairs):
     """
     Compare the latest completed hourly USD-volume estimate
     against the average of the preceding 24 completed hours.
-
-    Kraken OHLC fields:
-    [time, open, high, low, close, vwap, volume, count]
 
     Estimated USD volume = base-asset volume * candle VWAP.
     The currently forming candle is excluded.
@@ -318,8 +314,6 @@ def get_hourly_volume_ratio(symbol, available_pairs):
             return None
 
         result = data.get("result", {})
-
-        # The result also contains a "last" cursor.
         candle_keys = [
             key for key in result
             if key != "last"
@@ -343,7 +337,6 @@ def get_hourly_volume_ratio(symbol, available_pairs):
 
         completed.sort(key=lambda candle: int(candle[0]))
 
-        # Need one latest completed candle plus 24 previous ones.
         if len(completed) < 25:
             return None
 
@@ -400,7 +393,6 @@ def get_hourly_volume_ratio(symbol, available_pairs):
 
 def load_history():
     data = load_json(HISTORY_FILE, {})
-
     return data if isinstance(data, dict) else {}
 
 
@@ -537,60 +529,102 @@ def format_money(value):
 
 
 def build_market_message(sentiment, fear_greed, market):
+    if sentiment == "GREED":
+        sentiment_icon = "🟢"
+    elif sentiment == "FEAR":
+        sentiment_icon = "🔴"
+    else:
+        sentiment_icon = "⚪"
+
     lines = [
-        "CRYPTO EDGE | MARKET CONTEXT",
+        "━━━━━━━━━━━━━━━━━━",
+        "🌐 CRYPTO EDGE | MARKET REPORT",
+        "━━━━━━━━━━━━━━━━━━",
         "",
-        f"Sentiment: {sentiment}",
+        f"{sentiment_icon} Market Sentiment: {sentiment}",
         (
-            f"Fear & Greed: {fear_greed}"
+            f"🧠 Fear & Greed Index: {fear_greed}/100"
             if fear_greed is not None
-            else "Fear & Greed: N/A"
+            else "🧠 Fear & Greed Index: N/A"
         ),
     ]
 
     if market:
         lines.extend([
             "",
-            f"Market Cap: {format_money(market.get('market_cap'))}",
-            f"24h Market Volume: {format_money(market.get('volume_24h'))}",
-            f"BTC Dominance: {market.get('btc_dominance', 'N/A')}%",
-            f"Market Cap Change: {market.get('market_change', 'N/A')}%",
+            "📊 GLOBAL MARKET DATA",
+            f"💎 Market Cap: {format_money(market.get('market_cap'))}",
+            f"💰 24h Market Volume: {format_money(market.get('volume_24h'))}",
+            f"₿ BTC Dominance: {market.get('btc_dominance', 'N/A')}%",
+            f"📈 Market Cap Change: {market.get('market_change', 'N/A')}%",
         ])
 
     lines.extend([
         "",
-        "Hourly volume is estimated from Kraken USD spot candles.",
-        "It represents activity on Kraken, not the entire market.",
-        "Signals are screening results, not guaranteed trades.",
+        "━━━━━━━━━━━━━━━━━━",
+        "📡 CRYPTO EDGE SMART MONEY RADAR",
+        "Hourly volume is based on Kraken USD spot candles.",
+        "This reflects Kraken activity, not the entire market.",
+        "⚠️ Screening results only. No guaranteed trades.",
     ])
 
     return "\n".join(lines)
 
 
 def build_signal_message(signal):
+    is_bullish = signal["direction"] == "BULLISH"
+
+    if is_bullish:
+        header = "🟢 🚀 CRYPTO EDGE | BULLISH SIGNAL"
+        direction_label = "📈 Direction: BULLISH"
+    else:
+        header = "🔴 🐻 CRYPTO EDGE | BEARISH SIGNAL"
+        direction_label = "📉 Direction: BEARISH"
+
+    score = signal["score"]
+
+    if score >= 80:
+        strength = "🔥 VERY STRONG"
+    elif score >= 65:
+        strength = "💪 STRONG"
+    elif score >= 50:
+        strength = "⚡ MODERATE"
+    else:
+        strength = "⚪ WEAK"
+
+    change = signal["change_24h"]
+    change_emoji = "🟢" if change >= 0 else "🔴"
+
     lines = [
-        f"CRYPTO EDGE | {signal['direction']} SIGNAL",
+        "━━━━━━━━━━━━━━━━━━",
+        header,
+        "━━━━━━━━━━━━━━━━━━",
         "",
-        f"Coin: {signal['name']} ({signal['symbol']})",
-        f"Price: ${signal['price']:.8f}",
-        f"24h Change: {signal['change_24h']:+.2f}%",
-        f"CMC 24h Volume: ${signal['volume_24h']:,.0f}",
+        f"🪙 Coin: {signal['name']} (${signal['symbol']})",
+        f"💵 Price: ${signal['price']:.8f}",
+        f"{change_emoji} 24h Change: {change:+.2f}%",
+        f"💰 CMC 24h Volume: ${signal['volume_24h']:,.0f}",
         (
-            "Kraken Hourly Volume Ratio: "
-            f"{signal['hourly_volume_ratio']:.2f}x"
+            "📊 Kraken Hourly Volume: "
+            f"{signal['hourly_volume_ratio']:.2f}x average"
         ),
-        f"Score: {signal['score']}/100",
         "",
-        "Reasons:",
+        f"🎯 Signal Score: {score}/100",
+        f"⚡ Signal Strength: {strength}",
+        direction_label,
+        "",
+        "🔍 WHY THIS SIGNAL?",
     ]
 
     lines.extend(
-        f"- {reason}" for reason in signal["reasons"]
+        f"  • {reason}" for reason in signal["reasons"]
     )
 
     lines.extend([
         "",
-        "Analysis only, not financial advice.",
+        "━━━━━━━━━━━━━━━━━━",
+        "⚠️ ANALYSIS ONLY — NOT FINANCIAL ADVICE",
+        "📡 Crypto Edge Smart Money Radar",
     ])
 
     return "\n".join(lines)
@@ -639,8 +673,6 @@ def main():
     for coin in coins:
         previous = history.get(coin["id"], [])
 
-        # Avoid unnecessary API calls for coins that cannot
-        # qualify because their history is too short.
         if (
             isinstance(previous, list)
             and len(previous) >= MIN_HISTORY_POINTS
