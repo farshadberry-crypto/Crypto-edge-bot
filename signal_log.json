@@ -134,7 +134,19 @@
       "24h price change is at least 5%",
       "Price is above recorded history"
     ],
-    "results": {}
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.311,
+        "checked_at": "2026-10-10T01:41:49.577238+00:00",
+        "entry_price": 0.8190663945577497,
+        "price": 0.8252162127287136,
+        "price_change_pct": 0.7508,
+        "directional_change_pct": 0.7508,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    }
   },
   {
     "time": "2026-10-10T00:23:06.309905+00:00",
@@ -152,7 +164,19 @@
       "24h price change is at least 5%",
       "Price is above recorded history"
     ],
-    "results": {}
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.312,
+        "checked_at": "2026-10-10T01:41:49.577267+00:00",
+        "entry_price": 1.234496707420462,
+        "price": 1.2384701776533447,
+        "price_change_pct": 0.3219,
+        "directional_change_pct": 0.3219,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    }
   },
   {
     "time": "2026-10-10T00:23:15.094864+00:00",
@@ -170,7 +194,19 @@
       "24h price change is at least 2%",
       "Price is above recorded history"
     ],
-    "results": {}
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.31,
+        "checked_at": "2026-10-10T01:41:49.577278+00:00",
+        "entry_price": 0.2988396680190707,
+        "price": 0.2953480106552867,
+        "price_change_pct": -1.1684,
+        "directional_change_pct": -1.1684,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    }
   },
   {
     "time": "2026-10-10T00:23:05.785735+00:00",
@@ -188,7 +224,19 @@
       "24h price change is at least 2%",
       "Price is above recorded history"
     ],
-    "results": {}
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.312,
+        "checked_at": "2026-10-10T01:41:49.577286+00:00",
+        "entry_price": 0.06185908114420277,
+        "price": 0.0616296124505707,
+        "price_change_pct": -0.371,
+        "directional_change_pct": -0.371,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    }
   },
   {
     "time": "2026-10-10T00:38:50.521071+00:00",
@@ -207,7 +255,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.05,
+        "checked_at": "2026-10-10T01:41:49.577293+00:00",
+        "entry_price": 0.061894395375113695,
+        "price": 0.0616296124505707,
+        "price_change_pct": -0.4278,
+        "directional_change_pct": -0.4278,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -226,7 +286,19 @@
       "Kraken hourly volume is at least 2x its previous 24h hourly average",
       "24h price change is at least 5%"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.05,
+        "checked_at": "2026-10-10T01:41:49.577299+00:00",
+        "entry_price": 0.8177594983792612,
+        "price": 0.8252162127287136,
+        "price_change_pct": 0.9118,
+        "directional_change_pct": 0.9118,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
