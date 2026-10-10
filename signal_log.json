@@ -69,5 +69,73 @@
       "24h price change is at least 5%"
     ],
     "results": {}
+  },
+  {
+    "time": "2026-10-10T00:23:11.409631+00:00",
+    "id": "21794",
+    "name": "Aptos",
+    "symbol": "APT",
+    "price": 0.8190663945577497,
+    "volume_24h": 131633766.56264228,
+    "hourly_volume_ratio": 2.4856,
+    "change_24h": 11.55614923,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-10T00:23:06.309905+00:00",
+    "id": "6636",
+    "name": "Polkadot",
+    "symbol": "DOT",
+    "price": 1.234496707420462,
+    "volume_24h": 245057844.08879772,
+    "hourly_volume_ratio": 1.5776,
+    "change_24h": 11.52200813,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is above recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-10T00:23:15.094864+00:00",
+    "id": "2011",
+    "name": "Tezos",
+    "symbol": "XTZ",
+    "price": 0.2988396680190707,
+    "volume_24h": 8584568.34843379,
+    "hourly_volume_ratio": 3.1458,
+    "change_24h": 3.24663001,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded history"
+    ]
+  },
+  {
+    "time": "2026-10-10T00:23:05.785735+00:00",
+    "id": "3635",
+    "name": "Cronos",
+    "symbol": "CRO",
+    "price": 0.06185908114420277,
+    "volume_24h": 6533714.2230274,
+    "hourly_volume_ratio": 1.4074,
+    "change_24h": 2.40814533,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded history"
+    ]
   }
 ]
