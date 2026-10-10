@@ -61,5 +61,15 @@
     "missing_prices": 0,
     "status": "completed",
     "note": "Checkpoint results use the price available when the workflow runs, not an exact historical price at the target hour. actual_elapsed_hours records the real elapsed time. Directional change is an estimate, not actual trading profit."
+  },
+  {
+    "updated_at": "2026-10-10T04:43:38.673421+00:00",
+    "signals_checked": 20,
+    "pending_signals": 6,
+    "signals_with_results": 6,
+    "checkpoints_recorded": 6,
+    "missing_prices": 0,
+    "status": "completed",
+    "note": "Checkpoint results use the price available when the workflow runs, not an exact historical price at the target hour. actual_elapsed_hours records the real elapsed time. Directional change is an estimate, not actual trading profit."
   }
 ]
