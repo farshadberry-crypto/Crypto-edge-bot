@@ -839,5 +839,85 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T16:30:34.211869+00:00",
+    "price_time": "2026-10-10T16:30:34.211869+00:00",
+    "id": "35364",
+    "name": "Plume",
+    "symbol": "PLUME",
+    "price": 0.01904438438117909,
+    "volume_24h": 17964227.51736326,
+    "hourly_volume_ratio": 7.9981,
+    "change_24h": 6.27736645,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T16:30:34.211869+00:00",
+    "price_time": "2026-10-10T16:30:34.211869+00:00",
+    "id": "20947",
+    "name": "Sui",
+    "symbol": "SUI",
+    "price": 1.1229416009769035,
+    "volume_24h": 555994478.9560612,
+    "hourly_volume_ratio": 1.657,
+    "change_24h": 5.69024704,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T16:30:34.211869+00:00",
+    "price_time": "2026-10-10T16:30:34.211869+00:00",
+    "id": "4030",
+    "name": "Algorand",
+    "symbol": "ALGO",
+    "price": 0.11940916764766352,
+    "volume_24h": 90695102.3879288,
+    "hourly_volume_ratio": 3.1536,
+    "change_24h": 2.62736998,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-10T16:30:34.211869+00:00",
+    "price_time": "2026-10-10T16:30:34.211869+00:00",
+    "id": "3773",
+    "name": "Artificial Superintelligence Alliance",
+    "symbol": "FET",
+    "price": 0.22680842175409577,
+    "volume_24h": 190475009.98240173,
+    "hourly_volume_ratio": 1.2646,
+    "change_24h": 3.9163434,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
