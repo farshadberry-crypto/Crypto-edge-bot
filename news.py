@@ -2,12 +2,12 @@
 import os
 import json
 import re
+import time
 import hashlib
 import requests
 import xml.etree.ElementTree as ET
 
 from html import unescape
-from urllib.parse import urlparse
 
 
 # =========================
@@ -19,21 +19,14 @@ CHAT_ID = "@cryptoedgeAlerts"
 
 STATE_FILE = ".crypto_edge_seen.json"
 MAX_SEEN = 1000
-MAX_NEWS_PER_RUN = 20
+MAX_NEWS_PER_RUN = 10
 
 TELEGRAM_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
+# Only two selected news sources
 RSS_FEEDS = [
     ("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
     ("Cointelegraph", "https://cointelegraph.com/rss"),
-    ("Decrypt", "https://decrypt.co/feed"),
-    ("Bitcoin Magazine", "https://bitcoinmagazine.com/.rss/full/"),
-    ("Blockworks", "https://blockworks.co/feed"),
-    ("CryptoSlate", "https://cryptoslate.com/feed/"),
-    ("NewsBTC", "https://www.newsbtc.com/feed/"),
-    ("Bitcoin.com News", "https://news.bitcoin.com/feed/"),
-    ("CoinJournal", "https://coinjournal.net/news/feed/"),
-    ("The Defiant", "https://thedefiant.io/feed"),
 ]
 
 HEADERS = {
@@ -63,8 +56,14 @@ def normalize_title(title):
 
 
 def make_id(link, title):
-    identity = link.strip().rstrip("/").lower() if link else normalize_title(title)
-    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+    identity = (
+        link.strip().rstrip("/").lower()
+        if link
+        else normalize_title(title)
+    )
+    return hashlib.sha256(
+        identity.encode("utf-8")
+    ).hexdigest()
 
 
 def load_history():
@@ -79,7 +78,7 @@ def load_history():
 
     except (json.JSONDecodeError, OSError) as error:
         raise RuntimeError(
-            f"Could not read news history safely: {error}"
+            f"Could not read news history: {error}"
         )
 
 
@@ -109,7 +108,7 @@ def fetch_feed(source, feed_url):
 
     items = root.findall(".//item")
 
-    # Support Atom feeds too.
+    # Support Atom feeds too
     if not items:
         items = root.findall(
             ".//{http://www.w3.org/2005/Atom}entry"
@@ -146,7 +145,6 @@ def fetch_feed(source, feed_url):
         stories.append({
             "id": make_id(link, title),
             "title": title,
-            "link": link,
             "normalized_title": normalize_title(title),
         })
 
@@ -159,8 +157,7 @@ def fetch_feed(source, feed_url):
 # =========================
 
 def send_news(story):
-    # Only the news headline is displayed.
-    # No website name, source label, or article link.
+    # Show only the headline, never the source or article URL.
     message = (
         "⚡ CRYPTO EDGE\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
@@ -171,21 +168,51 @@ def send_news(story):
         "⚡ DATA OVER HYPE"
     )
 
-    response = session.post(
-        TELEGRAM_URL,
-        data={
-            "chat_id": CHAT_ID,
-            "text": message,
-            "disable_web_page_preview": "true",
-        },
-        timeout=20,
-    )
-    response.raise_for_status()
+    for attempt in range(5):
+        response = session.post(
+            TELEGRAM_URL,
+            data={
+                "chat_id": CHAT_ID,
+                "text": message,
+                "disable_web_page_preview": "true",
+            },
+            timeout=20,
+        )
 
-    result = response.json()
+        if response.status_code == 429:
+            try:
+                retry_after = int(
+                    response.json()
+                    .get("parameters", {})
+                    .get("retry_after", 5)
+                )
+            except (ValueError, TypeError):
+                retry_after = 5
 
-    if not result.get("ok"):
-        raise RuntimeError("Telegram rejected the news message.")
+            if attempt < 4:
+                wait_seconds = max(retry_after, 1) + 1
+                print(
+                    f"Telegram rate limit. "
+                    f"Retrying in {wait_seconds} seconds..."
+                )
+                time.sleep(wait_seconds)
+                continue
+
+            response.raise_for_status()
+
+        response.raise_for_status()
+
+        result = response.json()
+        if not result.get("ok"):
+            raise RuntimeError(
+                "Telegram rejected the news message."
+            )
+
+        # Small delay between successful messages
+        time.sleep(2)
+        return
+
+    raise RuntimeError("Could not send news after retries.")
 
 
 # =========================
@@ -193,7 +220,7 @@ def send_news(story):
 # =========================
 
 def main():
-    print("Starting Crypto Edge multi-source news...")
+    print("Starting Crypto Edge News...")
 
     seen_ids, first_run = load_history()
 
@@ -218,7 +245,7 @@ def main():
             "All news feeds failed. History was not changed."
         )
 
-    # Initialize history without sending old stories.
+    # On first run, register current headlines without posting old news.
     if first_run:
         initial_ids = {
             story["id"] for story in all_stories
@@ -247,8 +274,7 @@ def main():
 
         unique_stories.append(story)
 
-    # RSS normally lists newest first.
-    # Send older new stories first.
+    # RSS usually lists newest first. Send older new stories first.
     new_stories = list(reversed(unique_stories))
     new_stories = new_stories[-MAX_NEWS_PER_RUN:]
 
