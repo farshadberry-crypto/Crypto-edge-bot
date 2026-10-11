@@ -1671,5 +1671,25 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T12:38:10.738321+00:00",
+    "price_time": "2026-10-11T12:38:10.738321+00:00",
+    "id": "7431",
+    "name": "Akash Network",
+    "symbol": "AKT",
+    "price": 0.7589250665069871,
+    "volume_24h": 5801435.18677105,
+    "hourly_volume_ratio": 1.4315,
+    "change_24h": 3.21919264,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
