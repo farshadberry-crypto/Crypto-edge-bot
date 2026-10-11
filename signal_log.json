@@ -1369,5 +1369,65 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T04:33:11.521424+00:00",
+    "price_time": "2026-10-11T04:33:11.521424+00:00",
+    "id": "3635",
+    "name": "Cronos",
+    "symbol": "CRO",
+    "price": 0.059756802177666976,
+    "volume_24h": 6075505.49052455,
+    "hourly_volume_ratio": 2.1054,
+    "change_24h": -2.3231106,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T04:33:11.521424+00:00",
+    "price_time": "2026-10-11T04:33:11.521424+00:00",
+    "id": "6748",
+    "name": "Centrifuge",
+    "symbol": "CFG",
+    "price": 0.13943845113564518,
+    "volume_24h": 8444888.85131868,
+    "hourly_volume_ratio": 9.9305,
+    "change_24h": -4.52932184,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T04:33:11.521424+00:00",
+    "price_time": "2026-10-11T04:33:11.521424+00:00",
+    "id": "6841",
+    "name": "Phala Network",
+    "symbol": "PHA",
+    "price": 0.05852178070183092,
+    "volume_24h": 12725781.38609762,
+    "hourly_volume_ratio": 1.777,
+    "change_24h": -4.83404309,
+    "score": 70,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
