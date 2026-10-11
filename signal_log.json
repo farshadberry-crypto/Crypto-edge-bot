@@ -1722,7 +1722,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.039,
+        "checked_at": "2026-10-11T13:40:29.458189+00:00",
+        "entry_price": 0.7589250665069871,
+        "price": 0.7717476507744725,
+        "price_change_pct": 1.6896,
+        "directional_change_pct": 1.6896,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
