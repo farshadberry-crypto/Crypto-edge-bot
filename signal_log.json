@@ -1542,5 +1542,65 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T08:32:59.856000+00:00",
+    "price_time": "2026-10-11T08:32:59.856000+00:00",
+    "id": "35364",
+    "name": "Plume",
+    "symbol": "PLUME",
+    "price": 0.01913013169441579,
+    "volume_24h": 13625232.28133618,
+    "hourly_volume_ratio": 2.5886,
+    "change_24h": 2.26398316,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T08:32:59.856000+00:00",
+    "price_time": "2026-10-11T08:32:59.856000+00:00",
+    "id": "4558",
+    "name": "Flow",
+    "symbol": "FLOW",
+    "price": 0.03315135157503625,
+    "volume_24h": 5489022.91350055,
+    "hourly_volume_ratio": 2.034,
+    "change_24h": 4.08154437,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T08:32:59.856000+00:00",
+    "price_time": "2026-10-11T08:32:59.856000+00:00",
+    "id": "38770",
+    "name": "MegaETH",
+    "symbol": "MEGA",
+    "price": 0.043597185483930885,
+    "volume_24h": 9680959.10812385,
+    "hourly_volume_ratio": 1.6307,
+    "change_24h": 4.67045199,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
