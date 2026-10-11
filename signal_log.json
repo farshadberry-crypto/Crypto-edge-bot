@@ -2208,7 +2208,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244681+00:00",
+        "entry_price": 3.3598775359118775,
+        "price": 3.429889357216507,
+        "price_change_pct": 2.0838,
+        "directional_change_pct": 2.0838,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2228,7 +2240,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244710+00:00",
+        "entry_price": 1.2015821125497723,
+        "price": 1.2538929664292515,
+        "price_change_pct": 4.3535,
+        "directional_change_pct": 4.3535,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2248,7 +2272,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244721+00:00",
+        "entry_price": 0.06511002776764353,
+        "price": 0.06229110682799265,
+        "price_change_pct": -4.3295,
+        "directional_change_pct": -4.3295,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2268,7 +2304,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244729+00:00",
+        "entry_price": 0.022212967102527965,
+        "price": 0.021971831974254803,
+        "price_change_pct": -1.0856,
+        "directional_change_pct": -1.0856,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2288,7 +2336,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244736+00:00",
+        "entry_price": 542.0369230159313,
+        "price": 538.8680589918793,
+        "price_change_pct": -0.5846,
+        "directional_change_pct": -0.5846,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2308,7 +2368,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244743+00:00",
+        "entry_price": 0.3120683746459696,
+        "price": 0.3141489554454314,
+        "price_change_pct": 0.6667,
+        "directional_change_pct": 0.6667,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -2327,7 +2399,19 @@
       "Kraken hourly volume is at least 2x its previous 24h hourly average",
       "24h price change is at least 5%"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.17,
+        "checked_at": "2026-10-11T21:41:16.244750+00:00",
+        "entry_price": 0.12492674913747459,
+        "price": 0.12457015442487732,
+        "price_change_pct": -0.2854,
+        "directional_change_pct": -0.2854,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
