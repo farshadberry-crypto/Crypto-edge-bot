@@ -721,6 +721,17 @@
         "directional_change_pct": -3.9359,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288478+00:00",
+        "entry_price": 1.1743406469687454,
+        "price": 1.088652978026726,
+        "price_change_pct": -7.2967,
+        "directional_change_pct": -7.2967,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -762,6 +773,17 @@
         "price": 0.14393488040819402,
         "price_change_pct": -1.4507,
         "directional_change_pct": -1.4507,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288531+00:00",
+        "entry_price": 0.1460536929517613,
+        "price": 0.1397326298900764,
+        "price_change_pct": -4.3279,
+        "directional_change_pct": -4.3279,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
@@ -807,6 +829,17 @@
         "directional_change_pct": -2.4051,
         "direction": "BEARISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288543+00:00",
+        "entry_price": 515.0619656158291,
+        "price": 525.5872063131008,
+        "price_change_pct": 2.0435,
+        "directional_change_pct": -2.0435,
+        "direction": "BEARISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -848,6 +881,17 @@
         "price": 0.08572660304995551,
         "price_change_pct": -3.4122,
         "directional_change_pct": -3.4122,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288551+00:00",
+        "entry_price": 0.0887551478104394,
+        "price": 0.08662839701519189,
+        "price_change_pct": -2.3962,
+        "directional_change_pct": -2.3962,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
@@ -893,6 +937,17 @@
         "directional_change_pct": -0.5541,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288558+00:00",
+        "entry_price": 8.408689583930206,
+        "price": 8.318459654243204,
+        "price_change_pct": -1.0731,
+        "directional_change_pct": -1.0731,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -936,6 +991,17 @@
         "directional_change_pct": 2.4991,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288564+00:00",
+        "entry_price": 0.25020520664841334,
+        "price": 0.24717668218003055,
+        "price_change_pct": -1.2104,
+        "directional_change_pct": -1.2104,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -977,6 +1043,17 @@
         "price": 3.139842089497336,
         "price_change_pct": 1.3478,
         "directional_change_pct": 1.3478,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.162,
+        "checked_at": "2026-10-11T04:42:26.288570+00:00",
+        "entry_price": 3.0980848217217827,
+        "price": 3.0547847831919044,
+        "price_change_pct": -1.3976,
+        "directional_change_pct": -1.3976,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
