@@ -1736,5 +1736,165 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "6535",
+    "name": "NEAR Protocol",
+    "symbol": "NEAR",
+    "price": 5.738484042180582,
+    "volume_24h": 951913411.8847703,
+    "hourly_volume_ratio": 9.6003,
+    "change_24h": 6.69906264,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "37263",
+    "name": "Canton",
+    "symbol": "CC",
+    "price": 0.1267748692252635,
+    "volume_24h": 18136058.27835253,
+    "hourly_volume_ratio": 3.3536,
+    "change_24h": 5.95276893,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "4030",
+    "name": "Algorand",
+    "symbol": "ALGO",
+    "price": 0.12764331182282493,
+    "volume_24h": 97153181.51994596,
+    "hourly_volume_ratio": 5.3191,
+    "change_24h": 6.74681031,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "21794",
+    "name": "Aptos",
+    "symbol": "APT",
+    "price": 0.9273782118376351,
+    "volume_24h": 156060510.08271667,
+    "hourly_volume_ratio": 4.6923,
+    "change_24h": 8.74163694,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "3773",
+    "name": "Artificial Superintelligence Alliance",
+    "symbol": "FET",
+    "price": 0.23879888084388218,
+    "volume_24h": 171970796.98466632,
+    "hourly_volume_ratio": 6.7699,
+    "change_24h": 5.59226099,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "30495",
+    "name": "Monad",
+    "symbol": "MON",
+    "price": 0.02671755528804414,
+    "volume_24h": 23230051.1946863,
+    "hourly_volume_ratio": 5.4422,
+    "change_24h": 8.04513188,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "32684",
+    "name": "Sonic",
+    "symbol": "S",
+    "price": 0.059291418887597404,
+    "volume_24h": 99108871.3232564,
+    "hourly_volume_ratio": 10.3938,
+    "change_24h": 32.94199632,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-11T16:31:51.089834+00:00",
+    "price_time": "2026-10-11T16:31:51.089834+00:00",
+    "id": "38770",
+    "name": "MegaETH",
+    "symbol": "MEGA",
+    "price": 0.04779700064983741,
+    "volume_24h": 16134747.81416114,
+    "hourly_volume_ratio": 4.2328,
+    "change_24h": 13.92660751,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
