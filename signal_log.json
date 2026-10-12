@@ -3340,5 +3340,44 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T12:57:11.255024+00:00",
+    "price_time": "2026-10-12T12:57:11.255024+00:00",
+    "id": "3794",
+    "name": "Cosmos",
+    "symbol": "ATOM",
+    "price": 1.8599831761652401,
+    "volume_24h": 109536759.99272749,
+    "hourly_volume_ratio": 1.7483,
+    "change_24h": -3.61763833,
+    "score": 70,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T12:57:11.255024+00:00",
+    "price_time": "2026-10-12T12:57:11.255024+00:00",
+    "id": "4030",
+    "name": "Algorand",
+    "symbol": "ALGO",
+    "price": 0.12738064129324153,
+    "volume_24h": 132533752.67642163,
+    "hourly_volume_ratio": 4.6441,
+    "change_24h": 7.61170399,
+    "score": 50,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
