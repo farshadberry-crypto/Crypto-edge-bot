@@ -3123,5 +3123,65 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T08:39:38.341611+00:00",
+    "price_time": "2026-10-12T08:39:38.341611+00:00",
+    "id": "6841",
+    "name": "Phala Network",
+    "symbol": "PHA",
+    "price": 0.06277220468847941,
+    "volume_24h": 21167560.45007984,
+    "hourly_volume_ratio": 5.2264,
+    "change_24h": 8.25055474,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T08:39:38.341611+00:00",
+    "price_time": "2026-10-12T08:39:38.341611+00:00",
+    "id": "3794",
+    "name": "Cosmos",
+    "symbol": "ATOM",
+    "price": 1.8687415530041087,
+    "volume_24h": 101975269.50042821,
+    "hourly_volume_ratio": 2.531,
+    "change_24h": -3.44194551,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T08:39:38.341611+00:00",
+    "price_time": "2026-10-12T08:39:38.341611+00:00",
+    "id": "4847",
+    "name": "Stacks",
+    "symbol": "STX",
+    "price": 0.3840253447337634,
+    "volume_24h": 25382250.77778639,
+    "hourly_volume_ratio": 1.2527,
+    "change_24h": -3.12988999,
+    "score": 60,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
