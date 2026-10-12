@@ -2746,5 +2746,165 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "1437",
+    "name": "Zcash",
+    "symbol": "ZEC",
+    "price": 1295.3941699910263,
+    "volume_24h": 901697495.2437193,
+    "hourly_volume_ratio": 5.1246,
+    "change_24h": 5.73451111,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "35364",
+    "name": "Plume",
+    "symbol": "PLUME",
+    "price": 0.022854908243316176,
+    "volume_24h": 73439312.22423878,
+    "hourly_volume_ratio": 2.6931,
+    "change_24h": 21.35746463,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "5426",
+    "name": "Solana",
+    "symbol": "SOL",
+    "price": 111.94868912343394,
+    "volume_24h": 1845123770.056983,
+    "hourly_volume_ratio": 2.3041,
+    "change_24h": 2.33176198,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "4030",
+    "name": "Algorand",
+    "symbol": "ALGO",
+    "price": 0.12900447521201566,
+    "volume_24h": 114881311.5170218,
+    "hourly_volume_ratio": 1.7859,
+    "change_24h": 9.87234756,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "6841",
+    "name": "Phala Network",
+    "symbol": "PHA",
+    "price": 0.06046116794900906,
+    "volume_24h": 13341936.30899866,
+    "hourly_volume_ratio": 2.4774,
+    "change_24h": 3.3720352,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "20396",
+    "name": "Kaspa",
+    "symbol": "KAS",
+    "price": 0.0420882769216133,
+    "volume_24h": 8215448.48959217,
+    "hourly_volume_ratio": 1.8175,
+    "change_24h": 4.60393167,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "131",
+    "name": "Dash",
+    "symbol": "DASH",
+    "price": 53.03015114200659,
+    "volume_24h": 61683935.18351325,
+    "hourly_volume_ratio": 1.6459,
+    "change_24h": 4.57002473,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T04:36:35.193479+00:00",
+    "price_time": "2026-10-12T04:36:35.193479+00:00",
+    "id": "74",
+    "name": "Dogecoin",
+    "symbol": "DOGE",
+    "price": 0.08708385636487222,
+    "volume_24h": 488990769.81964105,
+    "hourly_volume_ratio": 1.2777,
+    "change_24h": 2.03106784,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
