@@ -3813,5 +3813,84 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T20:35:26.060416+00:00",
+    "price_time": "2026-10-12T20:35:26.060416+00:00",
+    "id": "4847",
+    "name": "Stacks",
+    "symbol": "STX",
+    "price": 0.44665133617548813,
+    "volume_24h": 60206003.3758626,
+    "hourly_volume_ratio": 6.6137,
+    "change_24h": 12.54931584,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T20:35:26.060416+00:00",
+    "price_time": "2026-10-12T20:35:26.060416+00:00",
+    "id": "23149",
+    "name": "Sei",
+    "symbol": "SEI",
+    "price": 0.06617384917684745,
+    "volume_24h": 48240172.46920462,
+    "hourly_volume_ratio": 1.641,
+    "change_24h": -5.40635263,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T20:35:26.060416+00:00",
+    "price_time": "2026-10-12T20:35:26.060416+00:00",
+    "id": "4642",
+    "name": "Hedera",
+    "symbol": "HBAR",
+    "price": 0.08995146101263286,
+    "volume_24h": 92986265.37043308,
+    "hourly_volume_ratio": 1.6152,
+    "change_24h": -4.08528491,
+    "score": 70,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-12T20:35:26.060416+00:00",
+    "price_time": "2026-10-12T20:35:26.060416+00:00",
+    "id": "1214",
+    "name": "Lisk",
+    "symbol": "LSK",
+    "price": 0.2189847724352871,
+    "volume_24h": 12946741.80661421,
+    "hourly_volume_ratio": 2.5368,
+    "change_24h": -5.53545282,
+    "score": 50,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
