@@ -3636,6 +3636,17 @@
         "directional_change_pct": -4.793,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.118,
+        "checked_at": "2026-10-13T08:46:43.308502+00:00",
+        "entry_price": 0.06277220468847941,
+        "price": 0.054723349796881926,
+        "price_change_pct": -12.8223,
+        "directional_change_pct": -12.8223,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -3679,6 +3690,17 @@
         "directional_change_pct": 0.762,
         "direction": "BEARISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.118,
+        "checked_at": "2026-10-13T08:46:43.308529+00:00",
+        "entry_price": 1.8687415530041087,
+        "price": 1.8438184011850114,
+        "price_change_pct": -1.3337,
+        "directional_change_pct": 1.3337,
+        "direction": "BEARISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -3720,6 +3742,17 @@
         "price": 0.3832838868686534,
         "price_change_pct": -0.1931,
         "directional_change_pct": 0.1931,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.118,
+        "checked_at": "2026-10-13T08:46:43.308540+00:00",
+        "entry_price": 0.3840253447337634,
+        "price": 0.42866800947184486,
+        "price_change_pct": 11.6249,
+        "directional_change_pct": -11.6249,
         "direction": "BEARISH",
         "evaluation_version": 2
       }
@@ -4695,6 +4728,17 @@
         "price": 0.4334343205696293,
         "price_change_pct": -0.0444,
         "directional_change_pct": -0.0444,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.162,
+        "checked_at": "2026-10-13T08:46:43.308548+00:00",
+        "entry_price": 0.4336269918516856,
+        "price": 0.42866800947184486,
+        "price_change_pct": -1.1436,
+        "directional_change_pct": -1.1436,
         "direction": "BULLISH",
         "evaluation_version": 2
       }
