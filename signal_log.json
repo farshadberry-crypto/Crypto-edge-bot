@@ -4105,5 +4105,165 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "52",
+    "name": "XRP",
+    "symbol": "XRP",
+    "price": 1.3250154827747416,
+    "volume_24h": 2292259744.4305453,
+    "hourly_volume_ratio": 2.1204,
+    "change_24h": -6.02409326,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "1437",
+    "name": "Zcash",
+    "symbol": "ZEC",
+    "price": 1138.1626747481087,
+    "volume_24h": 1077413613.7425802,
+    "hourly_volume_ratio": 2.4081,
+    "change_24h": -11.24560805,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "74",
+    "name": "Dogecoin",
+    "symbol": "DOGE",
+    "price": 0.08123178437512642,
+    "volume_24h": 882172914.3817375,
+    "hourly_volume_ratio": 3.5413,
+    "change_24h": -6.37933391,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "512",
+    "name": "Stellar",
+    "symbol": "XLM",
+    "price": 0.187805351179739,
+    "volume_24h": 166043289.83274466,
+    "hourly_volume_ratio": 2.3565,
+    "change_24h": -7.37908759,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "1831",
+    "name": "Bitcoin Cash",
+    "symbol": "BCH",
+    "price": 261.90831539028295,
+    "volume_24h": 238710258.92990485,
+    "hourly_volume_ratio": 3.7923,
+    "change_24h": -8.74508969,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "2",
+    "name": "Litecoin",
+    "symbol": "LTC",
+    "price": 60.18498241863376,
+    "volume_24h": 299042145.75736845,
+    "hourly_volume_ratio": 3.6199,
+    "change_24h": -7.03379113,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "37263",
+    "name": "Canton",
+    "symbol": "CC",
+    "price": 0.11726732537366452,
+    "volume_24h": 23599000.6512693,
+    "hourly_volume_ratio": 3.7392,
+    "change_24h": -7.37891318,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T00:47:29.811055+00:00",
+    "price_time": "2026-10-13T00:47:29.811055+00:00",
+    "id": "4642",
+    "name": "Hedera",
+    "symbol": "HBAR",
+    "price": 0.08526792294499615,
+    "volume_24h": 109854354.2272673,
+    "hourly_volume_ratio": 2.9985,
+    "change_24h": -9.32437518,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
