@@ -4700,5 +4700,63 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T08:39:20.320634+00:00",
+    "price_time": "2026-10-13T08:39:20.320634+00:00",
+    "id": "2011",
+    "name": "Tezos",
+    "symbol": "XTZ",
+    "price": 0.33640514635661595,
+    "volume_24h": 19882261.60161352,
+    "hourly_volume_ratio": 1.9887,
+    "change_24h": 2.97604817,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T08:39:20.320634+00:00",
+    "price_time": "2026-10-13T08:39:20.320634+00:00",
+    "id": "3077",
+    "name": "VeChain",
+    "symbol": "VET",
+    "price": 0.007389241182995017,
+    "volume_24h": 19041064.10561087,
+    "hourly_volume_ratio": 2.2762,
+    "change_24h": -6.81341357,
+    "score": 50,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-13T08:39:20.320634+00:00",
+    "price_time": "2026-10-13T08:39:20.320634+00:00",
+    "id": "23149",
+    "name": "Sei",
+    "symbol": "SEI",
+    "price": 0.06436127989624642,
+    "volume_24h": 64128282.25843296,
+    "hourly_volume_ratio": 3.6918,
+    "change_24h": -7.6309736,
+    "score": 50,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
