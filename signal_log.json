@@ -5302,7 +5302,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.941,
+        "checked_at": "2026-10-14T02:55:05.163082+00:00",
+        "entry_price": 551.2046424890142,
+        "price": 553.800332561248,
+        "price_change_pct": 0.4709,
+        "directional_change_pct": 0.4709,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -5322,7 +5334,19 @@
       "24h price change is at least 5%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.941,
+        "checked_at": "2026-10-14T02:55:05.163118+00:00",
+        "entry_price": 277.141310540255,
+        "price": 278.04736370908233,
+        "price_change_pct": 0.3269,
+        "directional_change_pct": 0.3269,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
