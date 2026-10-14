@@ -5726,5 +5726,165 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "36462",
+    "name": "Vaulta",
+    "symbol": "A",
+    "price": 0.10833270146027432,
+    "volume_24h": 12557942.06072259,
+    "hourly_volume_ratio": 2.0749,
+    "change_24h": 9.02477524,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "5426",
+    "name": "Solana",
+    "symbol": "SOL",
+    "price": 104.75621236045008,
+    "volume_24h": 2897482253.9643717,
+    "hourly_volume_ratio": 7.2525,
+    "change_24h": -2.58291905,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "1437",
+    "name": "Zcash",
+    "symbol": "ZEC",
+    "price": 1166.3053906072232,
+    "volume_24h": 1081880298.3523862,
+    "hourly_volume_ratio": 2.3198,
+    "change_24h": -3.26370206,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "5805",
+    "name": "Avalanche",
+    "symbol": "AVAX",
+    "price": 9.927919216362518,
+    "volume_24h": 310497572.3283089,
+    "hourly_volume_ratio": 2.5632,
+    "change_24h": -3.50231881,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "20947",
+    "name": "Sui",
+    "symbol": "SUI",
+    "price": 1.0260223485287063,
+    "volume_24h": 523767326.1452701,
+    "hourly_volume_ratio": 2.221,
+    "change_24h": -2.0640845,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "3635",
+    "name": "Cronos",
+    "symbol": "CRO",
+    "price": 0.05817368989238256,
+    "volume_24h": 5411156.44973929,
+    "hourly_volume_ratio": 3.9279,
+    "change_24h": -2.31387499,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "1027",
+    "name": "Ethereum",
+    "symbol": "ETH",
+    "price": 2440.975124548264,
+    "volume_24h": 11354984276.038078,
+    "hourly_volume_ratio": 1.622,
+    "change_24h": -2.95867316,
+    "score": 70,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T16:50:02.383562+00:00",
+    "price_time": "2026-10-14T16:50:02.383562+00:00",
+    "id": "2010",
+    "name": "Cardano",
+    "symbol": "ADA",
+    "price": 0.2299306384276885,
+    "volume_24h": 362897748.9529097,
+    "hourly_volume_ratio": 1.6838,
+    "change_24h": -2.57760134,
+    "score": 70,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
