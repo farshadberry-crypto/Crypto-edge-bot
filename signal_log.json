@@ -4983,6 +4983,17 @@
         "directional_change_pct": -1.1436,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.359,
+        "checked_at": "2026-10-14T04:58:30.445299+00:00",
+        "entry_price": 0.4336269918516856,
+        "price": 0.4366433698124624,
+        "price_change_pct": 0.6956,
+        "directional_change_pct": 0.6956,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
