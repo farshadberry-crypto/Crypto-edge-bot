@@ -6121,7 +6121,19 @@
       "24h price change is at least 5%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.355884+00:00",
+        "entry_price": 4.782656175932432,
+        "price": 4.821564167762292,
+        "price_change_pct": 0.8135,
+        "directional_change_pct": -0.8135,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6141,7 +6153,19 @@
       "24h price change is at least 5%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.355913+00:00",
+        "entry_price": 0.19575394250528477,
+        "price": 0.1969458057191124,
+        "price_change_pct": 0.6089,
+        "directional_change_pct": -0.6089,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6161,7 +6185,19 @@
       "24h price change is at least 2%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.355921+00:00",
+        "entry_price": 0.0842050421061442,
+        "price": 0.08440619177444199,
+        "price_change_pct": 0.2389,
+        "directional_change_pct": -0.2389,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6181,7 +6217,19 @@
       "24h price change is at least 2%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.355926+00:00",
+        "entry_price": 0.023927984938837923,
+        "price": 0.024173204348184527,
+        "price_change_pct": 1.0248,
+        "directional_change_pct": -1.0248,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6201,7 +6249,19 @@
       "24h price change is at least 2%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.356031+00:00",
+        "entry_price": 0.20087060629510572,
+        "price": 0.20330712693308722,
+        "price_change_pct": 1.213,
+        "directional_change_pct": -1.213,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6221,7 +6281,19 @@
       "24h price change is at least 5%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.356035+00:00",
+        "entry_price": 0.04965387071159921,
+        "price": 0.050667002534691606,
+        "price_change_pct": 2.0404,
+        "directional_change_pct": -2.0404,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6241,7 +6313,19 @@
       "24h price change is at least 2%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.356038+00:00",
+        "entry_price": 2417.68743587861,
+        "price": 2415.6196793948147,
+        "price_change_pct": -0.0855,
+        "directional_change_pct": 0.0855,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -6261,7 +6345,19 @@
       "24h price change is at least 2%",
       "Price is below recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.166,
+        "checked_at": "2026-10-14T21:55:54.356042+00:00",
+        "entry_price": 9.916005515178615,
+        "price": 9.966308580222352,
+        "price_change_pct": 0.5073,
+        "directional_change_pct": -0.5073,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
