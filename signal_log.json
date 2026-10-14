@@ -5596,5 +5596,45 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T12:57:16.703158+00:00",
+    "price_time": "2026-10-14T12:57:16.703158+00:00",
+    "id": "36462",
+    "name": "Vaulta",
+    "symbol": "A",
+    "price": 0.10333451659773399,
+    "volume_24h": 6716220.26655757,
+    "hourly_volume_ratio": 3.6147,
+    "change_24h": 2.93025383,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T12:57:16.703158+00:00",
+    "price_time": "2026-10-14T12:57:16.703158+00:00",
+    "id": "35364",
+    "name": "Plume",
+    "symbol": "PLUME",
+    "price": 0.020549938826195695,
+    "volume_24h": 22292085.02882718,
+    "hourly_volume_ratio": 4.9439,
+    "change_24h": -2.82110764,
+    "score": 75,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
