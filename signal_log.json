@@ -5348,5 +5348,45 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T04:48:43.596807+00:00",
+    "price_time": "2026-10-14T04:48:43.596807+00:00",
+    "id": "328",
+    "name": "Monero",
+    "symbol": "XMR",
+    "price": 556.4985998985454,
+    "volume_24h": 110914563.37441063,
+    "hourly_volume_ratio": 1.9362,
+    "change_24h": 4.70124905,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-14T04:48:43.596807+00:00",
+    "price_time": "2026-10-14T04:48:43.596807+00:00",
+    "id": "1831",
+    "name": "Bitcoin Cash",
+    "symbol": "BCH",
+    "price": 280.3222610622482,
+    "volume_24h": 144811622.05128992,
+    "hourly_volume_ratio": 1.9885,
+    "change_24h": 3.1396515,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
