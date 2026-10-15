@@ -1,10 +1,11 @@
 {
   "sent": [
+    "kraken-spot-HYPE/USD-LONG-1792103100",
     "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-spot-SUI/USD-LONG-1792103400",
     "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-spot-HYPE/USD-LONG-1792103100"
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-spot-SUI/USD-LONG-1792103400"
   ],
   "signals": [
     {
@@ -164,7 +165,40 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-15T23:14:01.819195+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_RSRUSD-LONG-1792107000",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_RSRUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_RSRUSD",
+      "direction": "LONG",
+      "entry": 0.0019557,
+      "stop_loss": 0.001954058679863779,
+      "targets": [
+        0.001957341320136221,
+        0.001958654376245198,
+        0.0019599674323541746
+      ],
+      "score": 5,
+      "rsi": 62.33,
+      "atr": 1.1723715258722639e-06,
+      "volume_ratio": 7.873,
+      "leverage": 5.0,
+      "stop_distance_percent": 0.084,
+      "estimated_margin_loss_percent": 0.42,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792107000,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (62.3)",
+        "Volume is 7.87x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-15T23:39:01.424052+00:00"
     }
   ],
-  "updated_at": "2026-10-15T23:14:03.589887+00:00"
+  "updated_at": "2026-10-15T23:39:03.543181+00:00"
 }
