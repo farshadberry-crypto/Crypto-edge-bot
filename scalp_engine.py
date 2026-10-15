@@ -11,8 +11,8 @@ from datetime import datetime, timezone
 
 # =========================================================
 # CRYPTO EDGE SCALP ENGINE
-# Spot + Futures | 5m entry confirmation | 15m trend
-# Public Bybit market data | Telegram chart signals
+# Spot + Futures | 5m entry | 15m trend
+# Full signal records for the trade journal
 # =========================================================
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -25,7 +25,6 @@ SCAN_LIMIT = 30
 MAX_SIGNALS_PER_MARKET = 2
 MIN_SPOT_TURNOVER = 10_000_000
 MIN_FUTURES_TURNOVER = 20_000_000
-
 VOLUME_RATIO_MIN = 1.15
 MIN_SCORE = 5
 STOP_ATR_MULTIPLIER = 1.4
@@ -33,8 +32,6 @@ STOP_ATR_MULTIPLIER = 1.4
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "CryptoEdge-Scalp/1.0"})
 
-
-# ------------------------- UTILITIES ----------------------
 
 def utc_now():
     return datetime.now(timezone.utc)
@@ -45,15 +42,18 @@ def load_state():
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, dict):
+                data.setdefault("sent", [])
+                data.setdefault("signals", [])
                 return data
     except (OSError, json.JSONDecodeError):
         pass
 
-    return {"sent": []}
+    return {"sent": [], "signals": []}
 
 
 def save_state(state):
     state["sent"] = state.get("sent", [])[-1000:]
+    state["signals"] = state.get("signals", [])[-1000:]
     temp = STATE_FILE + ".tmp"
 
     with open(temp, "w", encoding="utf-8") as f:
@@ -101,11 +101,10 @@ def get_klines(category, symbol, interval, limit=100):
     )
 
     rows = result.get("list", [])
-
-    # Bybit returns newest candles first.
     rows.reverse()
 
     candles = []
+
     for row in rows:
         try:
             candles.append({
@@ -190,14 +189,13 @@ def atr(candles, period=14):
 
 
 def volume_ratio(candles, period=20):
-    # Use the last fully closed candle, not the live candle.
     if len(candles) < period + 2:
         return None
 
     volumes = [c["volume"] for c in candles]
     previous = volumes[-period - 1:-1]
-
     average = sum(previous) / len(previous)
+
     if average <= 0:
         return None
 
@@ -208,10 +206,10 @@ def analyze(candles):
     if len(candles) < 60:
         return None
 
-    # The last returned candle may still be forming.
+    # Exclude the currently forming candle.
     closed = candles[:-1]
-
     closes = [c["close"] for c in closed]
+
     e9 = ema(closes, 9)
     e21 = ema(closes, 21)
     current_rsi = rsi(closes)
@@ -220,7 +218,8 @@ def analyze(candles):
 
     if (
         not e9 or not e21
-        or e9[-1] is None or e21[-1] is None
+        or e9[-1] is None
+        or e21[-1] is None
         or current_rsi is None
         or current_atr is None
         or vol_ratio is None
@@ -259,7 +258,6 @@ def build_signal(category, symbol, candles5, candles15):
     ratio = five["volume_ratio"]
     rsi_value = five["rsi"]
 
-    # Trend must agree on both timeframes.
     long_trend = (
         fifteen["ema9"] > fifteen["ema21"]
         and five["ema9"] > five["ema21"]
@@ -290,19 +288,25 @@ def build_signal(category, symbol, candles5, candles15):
 
         if long_breakout:
             score += 1
-            evidence.append("Closed candle broke previous high")
+            evidence.append(
+                "Closed candle broke previous high"
+            )
 
         if long_rsi_ok:
             score += 1
-            evidence.append(f"RSI confirmation: {rsi_value:.1f}")
+            evidence.append(
+                f"RSI confirmation: {rsi_value:.1f}"
+            )
 
         if volume_ok:
             score += 1
-            evidence.append(f"Volume ratio: {ratio:.2f}x")
+            evidence.append(
+                f"Volume ratio: {ratio:.2f}x"
+            )
 
         candidates.append(("LONG", score, evidence))
 
-    # Spot signals are long-only.
+    # Futures shorts only. Spot remains long-only.
     if category == "linear" and short_trend:
         score = 2
         evidence = [
@@ -312,15 +316,21 @@ def build_signal(category, symbol, candles5, candles15):
 
         if short_breakout:
             score += 1
-            evidence.append("Closed candle broke previous low")
+            evidence.append(
+                "Closed candle broke previous low"
+            )
 
         if short_rsi_ok:
             score += 1
-            evidence.append(f"RSI confirmation: {rsi_value:.1f}")
+            evidence.append(
+                f"RSI confirmation: {rsi_value:.1f}"
+            )
 
         if volume_ok:
             score += 1
-            evidence.append(f"Volume ratio: {ratio:.2f}x")
+            evidence.append(
+                f"Volume ratio: {ratio:.2f}x"
+            )
 
         candidates.append(("SHORT", score, evidence))
 
@@ -333,29 +343,28 @@ def build_signal(category, symbol, candles5, candles15):
         return None
 
     direction, score, evidence = max(
-        valid, key=lambda item: item[1]
+        valid,
+        key=lambda item: item[1],
     )
 
-    # Initial entry reference: last fully closed 5m candle.
     entry = price
     risk_distance = atr_value * STOP_ATR_MULTIPLIER
 
     if direction == "LONG":
         stop = entry - risk_distance
         targets = [
-            entry + risk_distance * 1.0,
+            entry + risk_distance,
             entry + risk_distance * 1.8,
             entry + risk_distance * 2.6,
         ]
     else:
         stop = entry + risk_distance
         targets = [
-            entry - risk_distance * 1.0,
+            entry - risk_distance,
             entry - risk_distance * 1.8,
             entry - risk_distance * 2.6,
         ]
 
-    # A unique signal ID is tied to the closed 5m candle.
     signal_id = (
         f"{category}:{symbol}:{direction}:{five['time']}"
     )
@@ -412,7 +421,10 @@ def create_chart(signal):
 
         bottom = min(candle["open"], candle["close"])
         height = abs(candle["close"] - candle["open"])
-        minimum_height = max(candle["close"] * 0.00001, 1e-10)
+        minimum_height = max(
+            candle["close"] * 0.00001,
+            1e-10,
+        )
 
         ax.bar(
             index,
@@ -457,6 +469,7 @@ def create_chart(signal):
     )
 
     ax.tick_params(colors="#cbd5e1")
+
     for spine in ax.spines.values():
         spine.set_color("#374151")
 
@@ -464,14 +477,17 @@ def create_chart(signal):
     fig.tight_layout()
 
     output = io.BytesIO()
+
     fig.savefig(
         output,
         format="png",
         dpi=140,
         facecolor=fig.get_facecolor(),
     )
+
     plt.close(fig)
     output.seek(0)
+
     return output
 
 
@@ -511,12 +527,8 @@ def send_signal(signal):
         f"🆔 {signal['signal_id']}"
     )
 
-    url = (
-        f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
-    )
-
-    response = requests.post(
-        url,
+    response = SESSION.post(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto",
         data={
             "chat_id": CHAT_ID,
             "caption": caption[:1024],
@@ -561,9 +573,6 @@ def get_candidates(category):
         if not symbol.endswith("USDT"):
             continue
 
-        if ticker.get("symbol", "").endswith("USDC"):
-            continue
-
         try:
             turnover = float(ticker.get("turnover24h", 0))
         except (TypeError, ValueError):
@@ -575,7 +584,11 @@ def get_candidates(category):
         candidates.append((turnover, symbol))
 
     candidates.sort(reverse=True)
-    return [symbol for _, symbol in candidates[:SCAN_LIMIT]]
+
+    return [
+        symbol
+        for _, symbol in candidates[:SCAN_LIMIT]
+    ]
 
 
 def main():
@@ -596,12 +609,19 @@ def main():
         print(f"{category}: scanning {len(symbols)} symbols")
 
         for symbol in symbols:
-            if published_by_market[category] >= MAX_SIGNALS_PER_MARKET:
+            if (
+                published_by_market[category]
+                >= MAX_SIGNALS_PER_MARKET
+            ):
                 break
 
             try:
-                candles5 = get_klines(category, symbol, "5", 100)
-                candles15 = get_klines(category, symbol, "15", 100)
+                candles5 = get_klines(
+                    category, symbol, "5", 100
+                )
+                candles15 = get_klines(
+                    category, symbol, "15", 100
+                )
 
                 signal = build_signal(
                     category,
@@ -618,8 +638,26 @@ def main():
                 if signal_id in sent:
                     continue
 
-                # Save the ID only after Telegram confirms success.
+                # Publish first. Only record confirmed Telegram posts.
                 send_signal(signal)
+
+                # Persist full signal details without chart candles.
+                stored_signal = {
+                    key: value
+                    for key, value in signal.items()
+                    if key != "candles"
+                }
+
+                state.setdefault("signals", [])
+
+                known_ids = {
+                    item.get("signal_id")
+                    for item in state["signals"]
+                    if isinstance(item, dict)
+                }
+
+                if signal_id not in known_ids:
+                    state["signals"].append(stored_signal)
 
                 sent.add(signal_id)
                 state["sent"] = list(sent)
