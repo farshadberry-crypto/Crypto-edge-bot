@@ -6747,5 +6747,45 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T08:51:10.120278+00:00",
+    "price_time": "2026-10-15T08:51:10.120278+00:00",
+    "id": "3077",
+    "name": "VeChain",
+    "symbol": "VET",
+    "price": 0.006733986015976201,
+    "volume_24h": 14544952.94777514,
+    "hourly_volume_ratio": 2.0429,
+    "change_24h": -6.83674082,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T08:51:10.120278+00:00",
+    "price_time": "2026-10-15T08:51:10.120278+00:00",
+    "id": "4642",
+    "name": "Hedera",
+    "symbol": "HBAR",
+    "price": 0.08194998127120452,
+    "volume_24h": 117019590.40551999,
+    "hourly_volume_ratio": 1.3186,
+    "change_24h": -5.2741214,
+    "score": 65,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
