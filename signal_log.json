@@ -7426,7 +7426,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.096,
+        "checked_at": "2026-10-15T17:54:58.076855+00:00",
+        "entry_price": 5.148533292338526,
+        "price": 5.260887616167639,
+        "price_change_pct": 2.1823,
+        "directional_change_pct": 2.1823,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -7446,7 +7458,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.096,
+        "checked_at": "2026-10-15T17:54:58.076890+00:00",
+        "entry_price": 0.08394235753409207,
+        "price": 0.08486559878543834,
+        "price_change_pct": 1.0999,
+        "directional_change_pct": 1.0999,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -7466,7 +7490,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.096,
+        "checked_at": "2026-10-15T17:54:58.077076+00:00",
+        "entry_price": 3.902330170612021,
+        "price": 3.931996431530942,
+        "price_change_pct": 0.7602,
+        "directional_change_pct": 0.7602,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   },
   {
@@ -7486,7 +7522,19 @@
       "24h price change is at least 2%",
       "Price is above recorded prices from the previous 24 hours"
     ],
-    "results": {},
+    "results": {
+      "1h": {
+        "target_hours": 1,
+        "actual_elapsed_hours": 1.096,
+        "checked_at": "2026-10-15T17:54:58.077085+00:00",
+        "entry_price": 0.31847223333165414,
+        "price": 0.32254228549753866,
+        "price_change_pct": 1.278,
+        "directional_change_pct": 1.278,
+        "direction": "BULLISH",
+        "evaluation_version": 2
+      }
+    },
     "evaluation_version": 2
   }
 ]
