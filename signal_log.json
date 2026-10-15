@@ -7232,5 +7232,85 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T16:49:13.078528+00:00",
+    "price_time": "2026-10-15T16:49:13.078528+00:00",
+    "id": "6535",
+    "name": "NEAR Protocol",
+    "symbol": "NEAR",
+    "price": 5.148533292338526,
+    "volume_24h": 1353419167.7233725,
+    "hourly_volume_ratio": 2.5961,
+    "change_24h": 4.81449128,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T16:49:13.078528+00:00",
+    "price_time": "2026-10-15T16:49:13.078528+00:00",
+    "id": "36645",
+    "name": "Plasma",
+    "symbol": "XPL",
+    "price": 0.08394235753409207,
+    "volume_24h": 105897141.3560855,
+    "hourly_volume_ratio": 3.4367,
+    "change_24h": 4.28425992,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T16:49:13.078528+00:00",
+    "price_time": "2026-10-15T16:49:13.078528+00:00",
+    "id": "5632",
+    "name": "Arweave",
+    "symbol": "AR",
+    "price": 3.902330170612021,
+    "volume_24h": 14027134.70775634,
+    "hourly_volume_ratio": 2.6918,
+    "change_24h": 2.58301329,
+    "score": 75,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T16:49:13.078528+00:00",
+    "price_time": "2026-10-15T16:49:13.078528+00:00",
+    "id": "2011",
+    "name": "Tezos",
+    "symbol": "XTZ",
+    "price": 0.31847223333165414,
+    "volume_24h": 9337270.46394461,
+    "hourly_volume_ratio": 1.8312,
+    "change_24h": 2.37330281,
+    "score": 70,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 1.5x average",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
