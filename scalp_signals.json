@@ -1,1 +1,39 @@
-{"sent": [], "signals": []}
+{
+  "sent": [
+    "kraken-spot-HYPE/USD-LONG-1792103100"
+  ],
+  "signals": [
+    {
+      "signal_id": "kraken-spot-HYPE/USD-LONG-1792103100",
+      "exchange": "kraken",
+      "exchange_symbol": "HYPEUSD",
+      "market_type": "spot",
+      "market": "SPOT",
+      "category": "spot",
+      "symbol": "HYPE/USD",
+      "direction": "LONG",
+      "entry": 82.46,
+      "stop_loss": 82.24510930577465,
+      "targets": [
+        82.67489069422534,
+        82.84680324960561,
+        83.01871580498589
+      ],
+      "score": 7,
+      "rsi": 62.44,
+      "atr": 0.15349335301810352,
+      "volume_ratio": 11.476,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792103100,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (62.4)",
+        "Volume is 11.48x its previous 20-candle average",
+        "Price broke above the previous 20 closed 5m candles",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-15T22:33:36.757551+00:00"
+    }
+  ],
+  "updated_at": "2026-10-15T22:33:49.142699+00:00"
+}
