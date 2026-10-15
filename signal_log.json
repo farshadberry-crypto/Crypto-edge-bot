@@ -7536,5 +7536,85 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T20:46:53.560928+00:00",
+    "price_time": "2026-10-15T20:46:53.560928+00:00",
+    "id": "36645",
+    "name": "Plasma",
+    "symbol": "XPL",
+    "price": 0.08637168205583387,
+    "volume_24h": 116573687.21367197,
+    "hourly_volume_ratio": 2.5254,
+    "change_24h": 8.26010712,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T20:46:53.560928+00:00",
+    "price_time": "2026-10-15T20:46:53.560928+00:00",
+    "id": "32684",
+    "name": "Sonic",
+    "symbol": "S",
+    "price": 0.05711742885052183,
+    "volume_24h": 39788103.16078079,
+    "hourly_volume_ratio": 3.5266,
+    "change_24h": 6.96715687,
+    "score": 80,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T20:46:53.560928+00:00",
+    "price_time": "2026-10-15T20:46:53.560928+00:00",
+    "id": "2280",
+    "name": "Filecoin",
+    "symbol": "FIL",
+    "price": 1.1592079673915143,
+    "volume_24h": 238392747.86786813,
+    "hourly_volume_ratio": 1.4182,
+    "change_24h": 7.09748029,
+    "score": 65,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 5%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T20:46:53.560928+00:00",
+    "price_time": "2026-10-15T20:46:53.560928+00:00",
+    "id": "21794",
+    "name": "Aptos",
+    "symbol": "APT",
+    "price": 0.8390578440400642,
+    "volume_24h": 77655942.11152954,
+    "hourly_volume_ratio": 1.2899,
+    "change_24h": 3.95361841,
+    "score": 60,
+    "direction": "BULLISH",
+    "reasons": [
+      "Kraken hourly volume exceeds the threshold",
+      "24h price change is at least 2%",
+      "Price is above recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
