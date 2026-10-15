@@ -1,6 +1,8 @@
 {
   "sent": [
-    "kraken-spot-HYPE/USD-LONG-1792103100"
+    "kraken-spot-HYPE/USD-LONG-1792103100",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-spot-HYPE/USD-LONG-1792103400"
   ],
   "signals": [
     {
@@ -33,7 +35,67 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-15T22:33:36.757551+00:00"
+    },
+    {
+      "signal_id": "kraken-spot-HYPE/USD-LONG-1792103400",
+      "exchange": "kraken",
+      "exchange_symbol": "HYPEUSD",
+      "market_type": "spot",
+      "market": "SPOT",
+      "category": "spot",
+      "symbol": "HYPE/USD",
+      "direction": "LONG",
+      "entry": 82.48,
+      "stop_loss": 82.26445864107647,
+      "targets": [
+        82.69554135892353,
+        82.86797444606236,
+        83.04040753320119
+      ],
+      "score": 5,
+      "rsi": 63.06,
+      "atr": 0.15395811351681118,
+      "volume_ratio": 1.727,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792103400,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (63.1)",
+        "Volume is 1.73x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-15T22:39:12.397006+00:00"
+    },
+    {
+      "signal_id": "kraken-spot-SUI/USD-LONG-1792103400",
+      "exchange": "kraken",
+      "exchange_symbol": "SUIUSD",
+      "market_type": "spot",
+      "market": "SPOT",
+      "category": "spot",
+      "symbol": "SUI/USD",
+      "direction": "LONG",
+      "entry": 1.0382,
+      "stop_loss": 1.0348317593957994,
+      "targets": [
+        1.0415682406042006,
+        1.0442628330875612,
+        1.0469574255709215
+      ],
+      "score": 5,
+      "rsi": 59.6,
+      "atr": 0.002405886145857588,
+      "volume_ratio": 2.795,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792103400,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (59.6)",
+        "Volume is 2.80x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-15T22:39:14.750753+00:00"
     }
   ],
-  "updated_at": "2026-10-15T22:33:49.142699+00:00"
+  "updated_at": "2026-10-15T22:39:26.426138+00:00"
 }
