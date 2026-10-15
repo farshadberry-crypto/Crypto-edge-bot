@@ -5790,6 +5790,17 @@
         "directional_change_pct": 4.2798,
         "direction": "BULLISH",
         "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.255,
+        "checked_at": "2026-10-15T13:12:35.708440+00:00",
+        "entry_price": 0.10333451659773399,
+        "price": 0.09505367494236108,
+        "price_change_pct": -8.0136,
+        "directional_change_pct": -8.0136,
+        "direction": "BULLISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -5831,6 +5842,17 @@
         "price": 0.02018246171397426,
         "price_change_pct": -1.7882,
         "directional_change_pct": 1.7882,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      },
+      "24h": {
+        "target_hours": 24,
+        "actual_elapsed_hours": 24.255,
+        "checked_at": "2026-10-15T13:12:35.708472+00:00",
+        "entry_price": 0.020549938826195695,
+        "price": 0.018210509107683383,
+        "price_change_pct": -11.3841,
+        "directional_change_pct": 11.3841,
         "direction": "BEARISH",
         "evaluation_version": 2
       }
@@ -6897,6 +6919,17 @@
         "directional_change_pct": 0.4101,
         "direction": "BEARISH",
         "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.357,
+        "checked_at": "2026-10-15T13:12:35.708481+00:00",
+        "entry_price": 0.006733986015976201,
+        "price": 0.006652619731229344,
+        "price_change_pct": -1.2083,
+        "directional_change_pct": 1.2083,
+        "direction": "BEARISH",
+        "evaluation_version": 2
       }
     },
     "evaluation_version": 2
@@ -6927,6 +6960,17 @@
         "price": 0.0815005545364852,
         "price_change_pct": -0.5484,
         "directional_change_pct": 0.5484,
+        "direction": "BEARISH",
+        "evaluation_version": 2
+      },
+      "4h": {
+        "target_hours": 4,
+        "actual_elapsed_hours": 4.357,
+        "checked_at": "2026-10-15T13:12:35.708488+00:00",
+        "entry_price": 0.08194998127120452,
+        "price": 0.0808009736688456,
+        "price_change_pct": -1.4021,
+        "directional_change_pct": 1.4021,
         "direction": "BEARISH",
         "evaluation_version": 2
       }
