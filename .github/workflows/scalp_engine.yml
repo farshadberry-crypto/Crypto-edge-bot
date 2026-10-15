@@ -16,11 +16,13 @@ concurrency:
 jobs:
   scan-market:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,15 +38,24 @@ jobs:
           TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
         run: python scalp_engine.py
 
-      - name: Save sent signal IDs
+      - name: Register new signals
+        run: python register_signals.py
+
+      - name: Update trade status
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
+        run: python trade_manager.py
+
+      - name: Save persistent state to GitHub
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scalp_signals.json
+          git add scalp_signals.json trade_journal.json
           if ! git diff --cached --quiet; then
-            git commit -m "Update scalp signal state"
+            git commit -m "Update Crypto Edge trading state"
             git push
           else
-            echo "No signal state changes."
+            echo "No state changes to save."
           fi
