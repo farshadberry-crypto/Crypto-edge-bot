@@ -21,22 +21,19 @@ def load_json(path, default):
 
 def save_json(path, data):
     temporary = path + ".tmp"
-
     with open(temporary, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
         file.flush()
         os.fsync(file.fileno())
-
     os.replace(temporary, path)
 
 
 def normalize_signal(signal):
     category = signal.get("category")
+    direction = signal.get("direction")
 
     if category not in ("spot", "linear"):
         return None
-
-    direction = signal.get("direction")
 
     if direction not in ("LONG", "SHORT"):
         return None
@@ -67,8 +64,20 @@ def normalize_signal(signal):
     if not signal_id or not symbol:
         return None
 
+    # Preserve exchange identifiers supplied by the signal engine.
+    # Do not guess contract symbols from display symbols.
+    exchange = signal.get("exchange", "kraken")
+    exchange_symbol = signal.get("exchange_symbol", symbol)
+    market_type = signal.get(
+        "market_type",
+        "spot" if category == "spot" else "futures",
+    )
+
     return {
         "signal_id": signal_id,
+        "exchange": exchange,
+        "exchange_symbol": exchange_symbol,
+        "market_type": market_type,
         "market": "SPOT" if category == "spot" else "FUTURES",
         "category": category,
         "symbol": symbol,
@@ -77,7 +86,11 @@ def normalize_signal(signal):
         "stop_loss": stop,
         "targets": targets,
         "score": signal.get("score"),
+        "rsi": signal.get("rsi"),
+        "atr": signal.get("atr"),
+        "volume_ratio": signal.get("volume_ratio"),
         "timeframe": signal.get("timeframe", "5m entry / 15m trend"),
+        "candle_time": signal.get("candle_time"),
         "evidence": signal.get("evidence", []),
         "created_at": signal.get("created_at", now_utc()),
         "status": "WAITING_ENTRY",
@@ -98,10 +111,11 @@ def main():
     print("Crypto Edge Signal Registration")
     print("UTC:", now_utc())
 
-    signals_data = load_json(SIGNALS_FILE, {"sent": []})
+    signals_data = load_json(
+        SIGNALS_FILE,
+        {"sent": [], "signals": []},
+    )
 
-    # The current scalp engine only saves sent IDs.
-    # Do not fabricate trade details from those IDs.
     if isinstance(signals_data, dict):
         signals = signals_data.get("signals", [])
     elif isinstance(signals_data, list):
@@ -149,7 +163,6 @@ def main():
 
     journal["trades"] = trades
     journal["updated_at"] = now_utc()
-
     save_json(JOURNAL_FILE, journal)
 
     print("New trades registered:", added)
