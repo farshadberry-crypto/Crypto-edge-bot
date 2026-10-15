@@ -1,0 +1,50 @@
+
+name: Crypto Edge Scalp Engine
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: crypto-edge-scalp-engine
+  cancel-in-progress: false
+
+jobs:
+  scan-market:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests matplotlib
+
+      - name: Run Scalp Engine
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
+        run: python scalp_engine.py
+
+      - name: Save sent signal IDs
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scalp_signals.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update scalp signal state"
+            git push
+          else
+            echo "No signal state changes."
+          fi
