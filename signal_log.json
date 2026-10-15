@@ -6469,5 +6469,165 @@
       }
     },
     "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "1437",
+    "name": "Zcash",
+    "symbol": "ZEC",
+    "price": 1113.859010124526,
+    "volume_24h": 1244753959.1919363,
+    "hourly_volume_ratio": 2.7894,
+    "change_24h": -12.04863754,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "20947",
+    "name": "Sui",
+    "symbol": "SUI",
+    "price": 1.004446932654344,
+    "volume_24h": 647183988.4678355,
+    "hourly_volume_ratio": 2.2842,
+    "change_24h": -5.56570209,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "4642",
+    "name": "Hedera",
+    "symbol": "HBAR",
+    "price": 0.0824546562986986,
+    "volume_24h": 112612383.41186845,
+    "hourly_volume_ratio": 2.3897,
+    "change_24h": -5.4075708,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "3635",
+    "name": "Cronos",
+    "symbol": "CRO",
+    "price": 0.056662542739138046,
+    "volume_24h": 7959201.69898409,
+    "hourly_volume_ratio": 2.895,
+    "change_24h": -5.64589412,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "4030",
+    "name": "Algorand",
+    "symbol": "ALGO",
+    "price": 0.11078609162263636,
+    "volume_24h": 100913345.66583107,
+    "hourly_volume_ratio": 2.6566,
+    "change_24h": -8.3021779,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "20396",
+    "name": "Kaspa",
+    "symbol": "KAS",
+    "price": 0.0359653924872379,
+    "volume_24h": 14280703.82855486,
+    "hourly_volume_ratio": 3.8424,
+    "change_24h": -7.8644935,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "2280",
+    "name": "Filecoin",
+    "symbol": "FIL",
+    "price": 1.052296201637145,
+    "volume_24h": 227144139.49608257,
+    "hourly_volume_ratio": 2.5876,
+    "change_24h": -12.02977531,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
+  },
+  {
+    "time": "2026-10-15T04:46:45.397788+00:00",
+    "price_time": "2026-10-15T04:46:45.397788+00:00",
+    "id": "30495",
+    "name": "Monad",
+    "symbol": "MON",
+    "price": 0.023313634751704816,
+    "volume_24h": 23612685.19491762,
+    "hourly_volume_ratio": 9.7844,
+    "change_24h": -6.71445137,
+    "score": 80,
+    "direction": "BEARISH",
+    "reasons": [
+      "Kraken hourly volume is at least 2x its previous 24h hourly average",
+      "24h price change is at least 5%",
+      "Price is below recorded prices from the previous 24 hours"
+    ],
+    "results": {},
+    "evaluation_version": 2
   }
 ]
