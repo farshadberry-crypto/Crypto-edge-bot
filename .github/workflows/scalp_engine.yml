@@ -32,6 +32,11 @@ jobs:
       - name: Install dependencies
         run: pip install requests matplotlib
 
+      - name: Initialize state files
+        run: |
+          python -c "import json, os; p='scalp_signals.json'; d={'sent': [], 'signals': []}; json.dump(d, open(p, 'w')) if not os.path.exists(p) else None"
+          python -c "import json, os; p='trade_journal.json'; d={'trades': []}; json.dump(d, open(p, 'w')) if not os.path.exists(p) else None"
+
       - name: Run Scalp Engine
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -52,7 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scalp_signals.json trade_journal.json
+          git add -f scalp_signals.json trade_journal.json
           if ! git diff --cached --quiet; then
             git commit -m "Update Crypto Edge trading state"
             git push
