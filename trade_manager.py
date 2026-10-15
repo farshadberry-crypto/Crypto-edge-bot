@@ -7,24 +7,26 @@ from datetime import datetime, timezone
 
 # =========================================================
 # CRYPTO EDGE TRADE MANAGER
-# Paper-trade tracking | Spot + Futures
-# Waiting entry -> Open -> Partial exits -> Closed
+# Kraken Spot + Kraken Futures
+# Paper tracking only. No real orders are placed.
 # =========================================================
 
-BASE_URL = "https://api.bybit.com"
+SPOT_BASE_URL = "https://api.kraken.com/0/public"
+FUTURES_BASE_URL = "https://futures.kraken.com/derivatives/api/v3"
+
 JOURNAL_FILE = "trade_journal.json"
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
 
-# Entry is confirmed when price reaches this zone around entry.
 ENTRY_ZONE_PERCENT = 0.15
-
-# Exit allocation: 40% at TP1, 30% at TP2, 30% at TP3.
 TP_ALLOCATIONS = [0.40, 0.30, 0.30]
 
 SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CryptoEdge-TradeManager/1.0"})
+SESSION.headers.update({
+    "User-Agent": "CryptoEdge-TradeManager/2.0",
+    "Accept": "application/json",
+})
 
 
 def now_utc():
@@ -54,39 +56,125 @@ def save_journal(journal):
     os.replace(temporary_file, JOURNAL_FILE)
 
 
-def api_get(path, params):
+def get_spot_price(pair):
+    if not pair:
+        raise RuntimeError("Missing Kraken Spot pair identifier.")
+
     response = SESSION.get(
-        BASE_URL + path,
-        params=params,
+        f"{SPOT_BASE_URL}/Ticker",
+        params={"pair": pair},
+        timeout=20,
+    )
+    response.raise_for_status()
+
+    payload = response.json()
+    errors = payload.get("error", [])
+
+    if errors:
+        raise RuntimeError("Kraken Spot API: " + "; ".join(errors))
+
+    result = payload.get("result", {})
+
+    if not result:
+        raise RuntimeError(f"No Kraken Spot ticker returned for {pair}")
+
+    ticker = next(iter(result.values()))
+    last_trade = ticker.get("c", [])
+
+    if not last_trade:
+        raise RuntimeError(f"Missing last-trade price for {pair}")
+
+    price = float(last_trade[0])
+
+    if price <= 0:
+        raise RuntimeError(f"Invalid Spot price for {pair}: {price}")
+
+    return price
+
+
+def get_futures_price(symbol):
+    if not symbol:
+        raise RuntimeError("Missing Kraken Futures contract symbol.")
+
+    response = SESSION.get(
+        f"{FUTURES_BASE_URL}/tickers",
         timeout=20,
     )
     response.raise_for_status()
 
     payload = response.json()
 
-    if payload.get("retCode") != 0:
+    if payload.get("result") != "success":
         raise RuntimeError(
-            payload.get("retMsg", "Unknown Bybit API error")
+            "Kraken Futures API error: "
+            + str(payload.get("error", payload))
         )
 
-    return payload.get("result", {})
+    tickers = payload.get("tickers", [])
 
-
-def get_price(category, symbol):
-    result = api_get(
-        "/v5/market/tickers",
-        {
-            "category": category,
-            "symbol": symbol,
-        },
+    ticker = next(
+        (
+            item for item in tickers
+            if item.get("symbol", "").upper() == symbol.upper()
+        ),
+        None,
     )
 
-    tickers = result.get("list", [])
+    if ticker is None:
+        raise RuntimeError(
+            f"Kraken Futures contract not found: {symbol}"
+        )
 
-    if not tickers:
-        raise RuntimeError(f"No ticker returned for {symbol}")
+    raw_price = ticker.get("last")
 
-    return float(tickers[0]["lastPrice"])
+    if raw_price is None:
+        raw_price = ticker.get("markPrice")
+
+    if raw_price is None:
+        raise RuntimeError(
+            f"No usable last/mark price for contract {symbol}"
+        )
+
+    price = float(raw_price)
+
+    if price <= 0:
+        raise RuntimeError(
+            f"Invalid Futures price for {symbol}: {price}"
+        )
+
+    return price
+
+
+def get_price(trade):
+    exchange = str(trade.get("exchange", "")).lower()
+    market_type = str(
+        trade.get("market_type", "")
+    ).lower()
+
+    exchange_symbol = trade.get("exchange_symbol")
+
+    if exchange != "kraken":
+        raise RuntimeError(
+            f"Unsupported exchange '{exchange}'. "
+            "Only Kraken trades are accepted by this manager."
+        )
+
+    if not exchange_symbol:
+        raise RuntimeError(
+            "Missing exchange_symbol. The signal engine must "
+            "save the exact Kraken market or contract identifier."
+        )
+
+    if market_type == "spot" or trade.get("category") == "spot":
+        return get_spot_price(exchange_symbol)
+
+    if market_type == "futures" or trade.get("category") == "linear":
+        return get_futures_price(exchange_symbol)
+
+    raise RuntimeError(
+        f"Unsupported market type '{market_type}' "
+        f"for {trade.get('symbol', 'unknown')}."
+    )
 
 
 def send_telegram(message):
@@ -130,7 +218,6 @@ def fmt(price):
 def entry_zone(trade):
     entry = float(trade["entry"])
     tolerance = entry * ENTRY_ZONE_PERCENT / 100
-
     return entry - tolerance, entry + tolerance
 
 
@@ -167,6 +254,7 @@ def initialize_trade(trade):
     trade.setdefault("status", "WAITING_ENTRY")
     trade.setdefault("created_at", now_utc())
     trade.setdefault("entry_confirmed_at", None)
+    trade.setdefault("confirmed_entry_price", None)
     trade.setdefault("closed_at", None)
     trade.setdefault("last_checked_at", None)
     trade.setdefault("targets_hit", [])
@@ -175,7 +263,6 @@ def initialize_trade(trade):
     trade.setdefault("realized_pnl_percent", 0.0)
     trade.setdefault("messages_sent", [])
     trade.setdefault("result", None)
-
     return trade
 
 
@@ -183,7 +270,6 @@ def notify_once(trade, key, message):
     if key in trade["messages_sent"]:
         return
 
-    # Only mark a message as sent if Telegram confirms delivery.
     if send_telegram(message):
         trade["messages_sent"].append(key)
 
@@ -232,13 +318,13 @@ def close_remaining(trade, price, reason):
 
     trade["status"] = "CLOSED"
     trade["closed_at"] = now_utc()
+
+    total = float(trade["realized_pnl_percent"])
     trade["result"] = (
-        "WIN" if trade["realized_pnl_percent"] > 0
-        else "LOSS" if trade["realized_pnl_percent"] < 0
+        "WIN" if total > 0
+        else "LOSS" if total < 0
         else "BREAKEVEN"
     )
-
-    total = trade["realized_pnl_percent"]
 
     message = (
         "🏁 CRYPTO EDGE | TRADE CLOSED\n\n"
@@ -256,10 +342,8 @@ def close_remaining(trade, price, reason):
 
 
 def process_open_trade(trade, price):
-    # If a target and stop could both have been crossed between
-    # scans, ticker snapshots cannot establish which happened first.
-    # This manager uses the current observed price only and therefore
-    # does not claim historical execution accuracy.
+    # Ticker polling cannot prove the order of price movements
+    # between scans. This is a paper-trading estimate.
 
     if is_stop_hit(trade, price):
         close_remaining(trade, price, "STOP LOSS")
@@ -320,9 +404,11 @@ def process_open_trade(trade, price):
         trade["remaining_fraction"] = 0.0
         trade["status"] = "CLOSED"
         trade["closed_at"] = now_utc()
+
+        total = float(trade["realized_pnl_percent"])
         trade["result"] = (
-            "WIN" if trade["realized_pnl_percent"] > 0
-            else "LOSS" if trade["realized_pnl_percent"] < 0
+            "WIN" if total > 0
+            else "LOSS" if total < 0
             else "BREAKEVEN"
         )
 
@@ -332,8 +418,7 @@ def process_open_trade(trade, price):
             "🏁 CRYPTO EDGE | ALL TARGETS COMPLETED\n\n"
             f"🪙 Coin: {trade['symbol']}\n"
             f"🏦 Market: {trade['market']}\n"
-            f"📊 Estimated realized return: "
-            f"{trade['realized_pnl_percent']:+.3f}%\n"
+            f"📊 Estimated realized return: {total:+.3f}%\n"
             f"📋 Result: {trade['result']}\n\n"
             "Paper-trade estimate, before fees and slippage.",
         )
@@ -367,6 +452,7 @@ def calculate_stats(trades, market=None):
         max(0.0, float(trade.get("realized_pnl_percent", 0)))
         for trade in closed
     )
+
     gross_loss = abs(sum(
         min(0.0, float(trade.get("realized_pnl_percent", 0)))
         for trade in closed
@@ -389,50 +475,38 @@ def calculate_stats(trades, market=None):
 
 
 def main():
-    print("Crypto Edge Trade Manager started:", now_utc())
+    print("Crypto Edge Kraken Trade Manager started:", now_utc())
 
     journal = load_journal()
     trades = journal["trades"]
-    changed = False
 
     for trade in trades:
+        if not isinstance(trade, dict):
+            continue
+
         initialize_trade(trade)
 
         if trade["status"] not in ("WAITING_ENTRY", "OPEN"):
             continue
 
         try:
-            price = get_price(
-                trade["category"],
-                trade["symbol"],
-            )
+            price = get_price(trade)
             trade["last_checked_at"] = now_utc()
 
             if trade["status"] == "WAITING_ENTRY":
                 if crossed_entry(trade, price):
                     open_trade(trade, price)
-                    changed = True
                 else:
                     low, high = entry_zone(trade)
                     print(
                         f"Waiting: {trade['symbol']} "
+                        f"market={trade.get('market')} "
                         f"price={fmt(price)} "
                         f"entry_zone={fmt(low)}-{fmt(high)}"
                     )
 
             elif trade["status"] == "OPEN":
-                before_status = trade["status"]
-                before_targets = len(trade["targets_hit"])
-                before_exits = len(trade["exits"])
-
                 process_open_trade(trade, price)
-
-                if (
-                    trade["status"] != before_status
-                    or len(trade["targets_hit"]) != before_targets
-                    or len(trade["exits"]) != before_exits
-                ):
-                    changed = True
 
         except Exception as exc:
             print(
@@ -440,12 +514,10 @@ def main():
                 f"{trade.get('symbol', 'unknown')}: {exc}"
             )
 
-        time.sleep(0.15)
+        time.sleep(0.20)
 
     journal["trades"] = trades
     journal["updated_at"] = now_utc()
-
-    # Save every run so the last-check timestamp is retained.
     save_journal(journal)
 
     print("Closed-trade statistics:")
