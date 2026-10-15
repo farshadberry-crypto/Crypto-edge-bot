@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-15T23:39:04.189762+00:00",
+      "last_checked_at": "2026-10-15T23:57:49.632949+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -284,7 +284,7 @@
       "entry_confirmed_at": "2026-10-15T23:39:04.721807+00:00",
       "confirmed_entry_price": 0.0019557,
       "closed_at": null,
-      "last_checked_at": "2026-10-15T23:39:04.721786+00:00",
+      "last_checked_at": "2026-10-15T23:57:50.085828+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -295,5 +295,5 @@
       "result": null
     }
   ],
-  "updated_at": "2026-10-15T23:39:05.433180+00:00"
+  "updated_at": "2026-10-15T23:57:50.285985+00:00"
 }
