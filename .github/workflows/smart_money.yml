@@ -1,38 +1,15 @@
-name: Crypto Edge Smart Money Radar
 
-'on':
+name: Crypto Edge Smart Money Radar - Legacy Paused
+
+on:
   workflow_dispatch:
-  schedule:
-    - cron: "15 */4 * * *"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  smart-money:
+  legacy-paused:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Requests
-        run: pip install requests
-
-      - name: Run Smart Money Radar
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-        run: python smart_money.py
-
-      - name: Save Smart Money History and Signals
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add smart_money_history.json signal_log.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Update smart money history and signals"
-            git push
-          else
-            echo "History and signal log unchanged."
-          fi
+      - name: Confirm legacy signals are paused
+        run: echo "Legacy signal generation is paused while the new scalp engine is being built."
