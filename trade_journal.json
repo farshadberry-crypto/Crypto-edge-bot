@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:30.817217+00:00",
+      "last_checked_at": "2026-10-16T08:13:08.324732+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -409,7 +409,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:31.258037+00:00",
+      "last_checked_at": "2026-10-16T08:13:08.692340+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -731,7 +731,7 @@
       "entry_confirmed_at": "2026-10-16T05:00:11.511545+00:00",
       "confirmed_entry_price": 5.133e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:31.674671+00:00",
+      "last_checked_at": "2026-10-16T08:13:09.064506+00:00",
       "targets_hit": [
         "TP1",
         "TP2"
@@ -846,7 +846,7 @@
       "entry_confirmed_at": "2026-10-16T05:56:41.376960+00:00",
       "confirmed_entry_price": 5.146e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:32.695047+00:00",
+      "last_checked_at": "2026-10-16T08:13:09.425744+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -889,7 +889,7 @@
       "entry_confirmed_at": "2026-10-16T06:23:32.336929+00:00",
       "confirmed_entry_price": 0.00772,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:33.117609+00:00",
+      "last_checked_at": "2026-10-16T08:13:09.797781+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -994,16 +994,36 @@
       "entry_confirmed_at": "2026-10-16T07:43:34.459799+00:00",
       "confirmed_entry_price": 0.08069,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T07:43:34.459779+00:00",
-      "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
+      "last_checked_at": "2026-10-16T08:13:10.162763+00:00",
+      "targets_hit": [
+        "TP1",
+        "TP2"
+      ],
+      "exits": [
+        {
+          "time": "2026-10-16T08:13:10.162786+00:00",
+          "price": 0.07993704151391107,
+          "fraction": 0.4,
+          "pnl_percent": 0.9699683920824247,
+          "reason": "TP1"
+        },
+        {
+          "time": "2026-10-16T08:13:10.756846+00:00",
+          "price": 0.07931067472503991,
+          "fraction": 0.3,
+          "pnl_percent": 1.7459431057483714,
+          "reason": "TP2"
+        }
+      ],
+      "remaining_fraction": 0.3,
+      "realized_pnl_percent": 0.9117702885574813,
       "messages_sent": [
-        "opened"
+        "opened",
+        "TP1",
+        "TP2"
       ],
       "result": null
     }
   ],
-  "updated_at": "2026-10-16T07:43:35.308844+00:00"
+  "updated_at": "2026-10-16T08:13:11.160343+00:00"
 }
