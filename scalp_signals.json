@@ -1,24 +1,26 @@
 {
   "sent": [
     "kraken-linear-PF_SHIBUSD-LONG-1792129800",
-    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-spot-SUI/USD-LONG-1792103400",
-    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
     "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_RSRUSD-LONG-1792107000",
-    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_MOGUSD-LONG-1792140000",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-linear-PF_BONKUSD-LONG-1792140000",
     "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
     "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
-    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
+    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
     "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
-    "kraken-spot-HYPE/USD-LONG-1792103400"
+    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
+    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
+    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700"
   ],
   "signals": [
     {
@@ -639,7 +641,73 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T07:43:26.946067+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_BONKUSD-LONG-1792140000",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_BONKUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_BONKUSD",
+      "direction": "LONG",
+      "entry": 3.123e-06,
+      "stop_loss": 3.1187512858157426e-06,
+      "targets": [
+        3.1272487141842574e-06,
+        3.1306476855316633e-06,
+        3.1340466568790692e-06
+      ],
+      "score": 5,
+      "rsi": 62.36,
+      "atr": 3.0347958458982134e-09,
+      "volume_ratio": 6.284,
+      "leverage": 5.0,
+      "stop_distance_percent": 0.136,
+      "estimated_margin_loss_percent": 0.68,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792140000,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (62.4)",
+        "Volume is 6.28x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T08:45:58.170394+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_MOGUSD-LONG-1792140000",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_MOGUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_MOGUSD",
+      "direction": "LONG",
+      "entry": 1.0524e-07,
+      "stop_loss": 1.0489480743568033e-07,
+      "targets": [
+        1.0558519256431966e-07,
+        1.0586134661577539e-07,
+        1.0613750066723111e-07
+      ],
+      "score": 5,
+      "rsi": 56.2,
+      "atr": 2.465661173711898e-10,
+      "volume_ratio": 1.395,
+      "leverage": 3.05,
+      "stop_distance_percent": 0.328,
+      "estimated_margin_loss_percent": 1.0,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792140000,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (56.2)",
+        "Volume is 1.40x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T08:46:00.411250+00:00"
     }
   ],
-  "updated_at": "2026-10-16T08:13:07.785084+00:00"
+  "updated_at": "2026-10-16T08:46:01.697538+00:00"
 }
