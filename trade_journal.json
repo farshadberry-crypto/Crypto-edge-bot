@@ -1236,7 +1236,7 @@
       "entry_confirmed_at": "2026-10-16T09:16:01.661445+00:00",
       "confirmed_entry_price": 5.156e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:16:21.373075+00:00",
+      "last_checked_at": "2026-10-16T11:20:01.390896+00:00",
       "targets_hit": [
         "TP1",
         "TP2"
@@ -1500,7 +1500,7 @@
       "entry_confirmed_at": "2026-10-16T11:15:10.876852+00:00",
       "confirmed_entry_price": 0.08264,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:16:21.664563+00:00",
+      "last_checked_at": "2026-10-16T11:20:01.662042+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1512,5 +1512,5 @@
       "entry_confirmation_method": "closed_1m_candle_entry_zone_touch"
     }
   ],
-  "updated_at": "2026-10-16T11:16:21.814711+00:00"
+  "updated_at": "2026-10-16T11:20:01.812178+00:00"
 }
