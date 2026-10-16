@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:09.257984+00:00",
+      "last_checked_at": "2026-10-16T05:27:12.647442+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -332,13 +332,15 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T00:21:41.221785+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T02:30:44.159734+00:00",
       "confirmed_entry_price": 5.125e-06,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:09.831755+00:00",
+      "closed_at": "2026-10-16T05:27:13.707135+00:00",
+      "last_checked_at": "2026-10-16T05:27:13.052308+00:00",
       "targets_hit": [
-        "TP1"
+        "TP1",
+        "TP2",
+        "TP3"
       ],
       "exits": [
         {
@@ -347,15 +349,32 @@
           "fraction": 0.4,
           "pnl_percent": 0.09637155278565132,
           "reason": "TP1"
+        },
+        {
+          "time": "2026-10-16T05:27:13.052338+00:00",
+          "price": 5.135893745120377e-06,
+          "fraction": 0.3,
+          "pnl_percent": 0.17346879501417237,
+          "reason": "TP2"
+        },
+        {
+          "time": "2026-10-16T05:27:13.538592+00:00",
+          "price": 5.139846520729433e-06,
+          "fraction": 0.3,
+          "pnl_percent": 0.25056603724269344,
+          "reason": "TP3"
         }
       ],
-      "remaining_fraction": 0.6,
-      "realized_pnl_percent": 0.03854862111426053,
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": 0.1657590707913203,
       "messages_sent": [
         "opened",
-        "TP1"
+        "TP1",
+        "TP2",
+        "TP3",
+        "closed"
       ],
-      "result": null
+      "result": "WIN"
     },
     {
       "signal_id": "kraken-linear-PF_RSRUSD-SHORT-1792113900",
@@ -390,7 +409,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:10.171918+00:00",
+      "last_checked_at": "2026-10-16T05:27:14.535942+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -535,7 +554,7 @@
       "entry_confirmed_at": "2026-10-16T04:00:24.138154+00:00",
       "confirmed_entry_price": 0.08493,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:10.506155+00:00",
+      "last_checked_at": "2026-10-16T05:27:14.892390+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -578,7 +597,7 @@
       "entry_confirmed_at": "2026-10-16T04:28:08.409629+00:00",
       "confirmed_entry_price": 0.002076,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:10.846209+00:00",
+      "last_checked_at": "2026-10-16T05:27:15.295751+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -621,7 +640,7 @@
       "entry_confirmed_at": "2026-10-16T04:28:08.914877+00:00",
       "confirmed_entry_price": 0.0007012,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:11.178936+00:00",
+      "last_checked_at": "2026-10-16T05:27:15.697945+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -664,16 +683,27 @@
       "entry_confirmed_at": "2026-10-16T05:00:11.511545+00:00",
       "confirmed_entry_price": 5.133e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:00:11.511523+00:00",
-      "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
+      "last_checked_at": "2026-10-16T05:27:16.051048+00:00",
+      "targets_hit": [
+        "TP1"
+      ],
+      "exits": [
+        {
+          "time": "2026-10-16T05:27:16.051076+00:00",
+          "price": 5.140629082478493e-06,
+          "fraction": 0.4,
+          "pnl_percent": 0.14862814101876334,
+          "reason": "TP1"
+        }
+      ],
+      "remaining_fraction": 0.6,
+      "realized_pnl_percent": 0.05945125640750534,
       "messages_sent": [
-        "opened"
+        "opened",
+        "TP1"
       ],
       "result": null
     }
   ],
-  "updated_at": "2026-10-16T05:00:12.086049+00:00"
+  "updated_at": "2026-10-16T05:27:16.425826+00:00"
 }
