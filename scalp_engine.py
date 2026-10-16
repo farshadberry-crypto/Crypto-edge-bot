@@ -10,12 +10,9 @@ import matplotlib.dates as mdates
 import matplotlib.patches as patches
 from datetime import datetime, timezone
 
-
-# =========================================================
-# CRYPTO EDGE FUTURES SCALP ENGINE v4.1 DIAGNOSTIC
+# CRYPTO EDGE FUTURES SCALP ENGINE v5
 # Kraken Futures | 5m entry | 15m trend
-# Paper signals only. No real orders are placed.
-# =========================================================
+# Paper signals only. No real orders.
 
 FUTURES_API = "https://futures.kraken.com/derivatives/api/v3"
 FUTURES_CHARTS = "https://futures.kraken.com/api/charts/v1"
@@ -43,7 +40,7 @@ TP3_RR = 2.50
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    "User-Agent": "CryptoEdge-FuturesScalpEngine/4.1",
+    "User-Agent": "CryptoEdge-FuturesScalpEngine/5.0",
     "Accept": "application/json",
 })
 
@@ -87,7 +84,6 @@ def display_symbol(contract):
     value = str(contract or "").strip()
     if value.startswith(("PF_", "PI_")):
         value = value[3:]
-
     for quote in ("USDT", "USDC", "USD", "EUR", "GBP", "BTC"):
         if value.endswith(quote) and len(value) > len(quote):
             base = value[:-len(quote)]
@@ -113,7 +109,7 @@ def telegram_send_photo(path, caption):
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
 
     if not token:
-        print("TELEGRAM_BOT_TOKEN is missing")
+        print("ERROR: TELEGRAM_BOT_TOKEN is missing")
         return False
 
     try:
@@ -126,12 +122,10 @@ def telegram_send_photo(path, caption):
             )
         response.raise_for_status()
         payload = response.json()
-
         if not payload.get("ok"):
             print("Telegram photo rejected:", payload)
             return False
         return True
-
     except (requests.RequestException, OSError, ValueError) as exc:
         print("Telegram photo error:", exc)
         return False
@@ -143,18 +137,13 @@ def fetch_futures_universe():
         raise RuntimeError("Kraken Futures ticker error: " + str(payload))
 
     ranked = []
-
     for ticker in payload.get("tickers", []):
         contract = ticker.get("symbol", "")
         if not contract.startswith(("PF_", "PI_")):
             continue
 
         try:
-            price = float(
-                ticker.get("last")
-                or ticker.get("markPrice")
-                or 0
-            )
+            price = float(ticker.get("last") or ticker.get("markPrice") or 0)
             volume = float(
                 ticker.get("vol24h")
                 or ticker.get("volume24h")
@@ -173,14 +162,12 @@ def fetch_futures_universe():
             "reported_volume": volume,
         })
 
-    ranked.sort(
-        key=lambda item: item["reported_volume"],
-        reverse=True,
-    )
-
+    ranked.sort(key=lambda item: item["reported_volume"], reverse=True)
     if not ranked:
         raise RuntimeError("No eligible Kraken Futures contracts returned")
 
+    print("Futures contracts available:", len(ranked))
+    print("Ranking uses Kraken's reported 24h volume; units may vary by endpoint.")
     return ranked[:SCAN_LIMIT]
 
 
@@ -190,14 +177,32 @@ def fetch_futures_candles(contract, resolution):
         {"count": 120},
     )
 
-    candles = []
-    interval = {"5m": 300, "15m": 900}.get(resolution, 300)
+    raw_candles = payload.get("candles")
+    if not isinstance(raw_candles, list):
+        raise RuntimeError(
+            f"Unexpected candle response for {contract} {resolution}: "
+            f"keys={list(payload.keys())}"
+        )
 
-    for row in payload.get("candles", []):
+    interval = {"5m": 300, "15m": 900}.get(resolution)
+    if interval is None:
+        raise ValueError("Unsupported timeframe: " + resolution)
+
+    now = int(time.time())
+    candles = []
+
+    for row in raw_candles:
         try:
-            candle_time = int(row["time"])
-            if candle_time > 10_000_000_000:
-                candle_time //= 1000
+            raw_time = int(float(row["time"]))
+            candle_time = (
+                raw_time // 1000
+                if raw_time > 10_000_000_000
+                else raw_time
+            )
+
+            volume_value = row.get("volume")
+            if volume_value is None:
+                raise ValueError("missing volume field")
 
             candle = {
                 "time": candle_time,
@@ -205,25 +210,32 @@ def fetch_futures_candles(contract, resolution):
                 "high": float(row["high"]),
                 "low": float(row["low"]),
                 "close": float(row["close"]),
-                "volume": float(row.get("volume", 0) or 0),
+                "volume": float(volume_value),
             }
 
-            if (
-                candle["open"] <= 0
-                or candle["close"] <= 0
-                or candle["low"] <= 0
-                or candle["high"] <= 0
-                or candle["high"] < candle["low"]
-            ):
+            prices = [
+                candle["open"], candle["high"],
+                candle["low"], candle["close"]
+            ]
+
+            if not all(p > 0 for p in prices):
+                continue
+            if candle["high"] < max(candle["open"], candle["close"]):
+                continue
+            if candle["low"] > min(candle["open"], candle["close"]):
+                continue
+            if candle["high"] < candle["low"]:
+                continue
+            if candle["volume"] < 0:
                 continue
 
-            # Exclude candles that have not fully closed.
-            if candle_time + interval > int(time.time()):
+            # Only fully closed candles, with a small safety buffer.
+            if candle_time + interval > now - 2:
                 continue
 
             candles.append(candle)
 
-        except (KeyError, TypeError, ValueError):
+        except (KeyError, TypeError, ValueError, OverflowError):
             continue
 
     unique = {c["time"]: c for c in candles}
@@ -231,7 +243,19 @@ def fetch_futures_candles(contract, resolution):
 
     if len(candles) < 35:
         raise RuntimeError(
-            f"Not enough closed {resolution} candles: {len(candles)}"
+            f"Only {len(candles)} valid closed {resolution} candles "
+            f"for {contract}; API returned {len(raw_candles)} rows"
+        )
+
+    gaps = [
+        candles[i]["time"] - candles[i - 1]["time"]
+        for i in range(1, len(candles))
+    ]
+    normal_gaps = sum(g <= interval * 2 for g in gaps)
+    if gaps and normal_gaps / len(gaps) < 0.80:
+        print(
+            f"WARNING {contract} {resolution}: irregular candle spacing "
+            f"({normal_gaps}/{len(gaps)} normal intervals)"
         )
 
     return candles
@@ -240,13 +264,10 @@ def fetch_futures_candles(contract, resolution):
 def ema(values, period):
     if len(values) < period:
         return None
-
     value = sum(values[:period]) / period
     multiplier = 2 / (period + 1)
-
     for current in values[period:]:
         value = (current - value) * multiplier + value
-
     return value
 
 
@@ -254,27 +275,19 @@ def calculate_rsi(closes, period=14):
     if len(closes) <= period:
         return None
 
-    changes = [
-        closes[i] - closes[i - 1]
-        for i in range(1, len(closes))
-    ]
-    gains = [max(change, 0) for change in changes]
-    losses = [max(-change, 0) for change in changes]
+    changes = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    gains = [max(x, 0) for x in changes]
+    losses = [max(-x, 0) for x in changes]
 
     avg_gain = sum(gains[:period]) / period
     avg_loss = sum(losses[:period]) / period
 
     for i in range(period, len(changes)):
-        avg_gain = (
-            avg_gain * (period - 1) + gains[i]
-        ) / period
-        avg_loss = (
-            avg_loss * (period - 1) + losses[i]
-        ) / period
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
 
     if avg_loss == 0:
         return 100.0
-
     rs = avg_gain / avg_loss
     return 100 - (100 / (1 + rs))
 
@@ -285,12 +298,12 @@ def calculate_atr(candles, period=ATR_PERIOD):
 
     ranges = []
     for i in range(1, len(candles)):
-        current = candles[i]
-        previous_close = candles[i - 1]["close"]
+        c = candles[i]
+        prev = candles[i - 1]["close"]
         ranges.append(max(
-            current["high"] - current["low"],
-            abs(current["high"] - previous_close),
-            abs(current["low"] - previous_close),
+            c["high"] - c["low"],
+            abs(c["high"] - prev),
+            abs(c["low"] - prev),
         ))
 
     if len(ranges) < period:
@@ -299,7 +312,6 @@ def calculate_atr(candles, period=ATR_PERIOD):
     value = sum(ranges[:period]) / period
     for current in ranges[period:]:
         value = (value * (period - 1) + current) / period
-
     return value
 
 
@@ -310,19 +322,13 @@ def calculate_structure(candles, direction, atr, entry):
 
     if direction == "LONG":
         swing_low = min(c["low"] for c in lookback)
-        stop = min(
-            swing_low - atr * 0.15,
-            entry - atr * ATR_STOP_MULTIPLIER,
-        )
+        stop = min(swing_low - atr * 0.15, entry - atr * ATR_STOP_MULTIPLIER)
         if stop <= 0 or stop >= entry:
             return None, "invalid LONG stop placement"
         risk = entry - stop
     else:
         swing_high = max(c["high"] for c in lookback)
-        stop = max(
-            swing_high + atr * 0.15,
-            entry + atr * ATR_STOP_MULTIPLIER,
-        )
+        stop = max(swing_high + atr * 0.15, entry + atr * ATR_STOP_MULTIPLIER)
         if stop <= entry:
             return None, "invalid SHORT stop placement"
         risk = stop - entry
@@ -334,6 +340,34 @@ def calculate_structure(candles, direction, atr, entry):
         return None, f"stop too wide ({distance:.3f}%)"
 
     return (stop, risk, distance), "OK"
+
+
+def calculate_volume_ratio(volumes):
+    """
+    Compare the latest three closed candles' average volume against
+    the average of the preceding 20 closed candles.
+    Zero-volume candles remain zero; they are not fabricated or filled.
+    """
+    if len(volumes) < 24:
+        return None, "insufficient volume history"
+
+    baseline = volumes[-23:-3]
+    recent = volumes[-3:]
+
+    if len(baseline) != 20 or len(recent) != 3:
+        return None, "invalid volume window"
+
+    baseline_avg = sum(baseline) / len(baseline)
+    recent_avg = sum(recent) / len(recent)
+
+    if baseline_avg <= 0:
+        return None, "baseline volume is zero"
+    if not any(v > 0 for v in baseline):
+        return None, "no baseline trading volume"
+    if not any(v > 0 for v in recent):
+        return 0.0, "all three latest closed candles have zero volume"
+
+    return recent_avg / baseline_avg, "OK"
 
 
 def evaluate_signal(contract, candles_5m, candles_15m):
@@ -348,10 +382,8 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     previous = candles_5m[-2]
     entry = last["close"]
 
-    fast15 = ema(closes_15m, 9)
-    slow15 = ema(closes_15m, 21)
-    fast5 = ema(closes, 9)
-    slow5 = ema(closes, 21)
+    fast15, slow15 = ema(closes_15m, 9), ema(closes_15m, 21)
+    fast5, slow5 = ema(closes, 9), ema(closes, 21)
     rsi = calculate_rsi(closes)
     atr = calculate_atr(candles_5m)
 
@@ -360,22 +392,27 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     if entry <= 0 or atr <= 0:
         return None, "invalid price or ATR"
 
-    average_volume = sum(volumes[-21:-1]) / 20
-    if average_volume <= 0:
-        return None, "average volume is zero"
+    volume_ratio, volume_status = calculate_volume_ratio(volumes)
+    if volume_ratio is None:
+        return None, volume_status
 
-    volume_ratio = volumes[-1] / average_volume
+    print(
+        f"VOLUME {display_symbol(contract)}: "
+        f"latest3-vs-previous20={volume_ratio:.3f}x ({volume_status})"
+    )
+
     if volume_ratio < VOLUME_RATIO_MIN:
-        return None, f"volume too low ({volume_ratio:.2f}x < {VOLUME_RATIO_MIN:.2f}x)"
+        return None, (
+            f"volume too low ({volume_ratio:.2f}x < "
+            f"{VOLUME_RATIO_MIN:.2f}x; {volume_status})"
+        )
 
     structure = candles_5m[-21:-1]
     recent_high = max(c["high"] for c in structure)
     recent_low = min(c["low"] for c in structure)
 
-    bull15 = fast15 > slow15
-    bear15 = fast15 < slow15
-    bull5 = fast5 > slow5
-    bear5 = fast5 < slow5
+    bull15, bear15 = fast15 > slow15, fast15 < slow15
+    bull5, bear5 = fast5 > slow5, fast5 < slow5
     breakout_up = last["close"] > recent_high
     breakout_down = last["close"] < recent_low
     momentum_up = last["close"] > previous["close"]
@@ -392,7 +429,6 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     if bear15:
         short_score += 2
         evidence_short.append("15m EMA 9 below EMA 21")
-
     if bull5:
         long_score += 1
         evidence_long.append("5m EMA 9 above EMA 21")
@@ -407,7 +443,7 @@ def evaluate_signal(contract, candles_5m, candles_15m):
         short_score += 1
         evidence_short.append(f"5m RSI bearish range: {rsi:.1f}")
 
-    evidence_volume = f"Closed-candle volume {volume_ratio:.2f}x average"
+    evidence_volume = f"3-candle average volume {volume_ratio:.2f}x baseline"
     long_score += 1
     short_score += 1
     evidence_long.append(evidence_volume)
@@ -419,7 +455,6 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     if breakout_down:
         short_score += 2
         evidence_short.append("5m close broke below prior 20-candle low")
-
     if momentum_up:
         long_score += 1
         evidence_long.append("Latest 5m candle has bullish momentum")
@@ -440,9 +475,9 @@ def evaluate_signal(contract, candles_5m, candles_15m):
         return None, "ambiguous LONG and SHORT conditions"
     if not long_ok and not short_ok:
         return None, (
-            f"filters not aligned | LONG score={long_score}, "
-            f"SHORT score={short_score}, RSI={rsi:.1f}, "
-            f"trend15={'bullish' if bull15 else 'bearish' if bear15 else 'flat'}, "
+            f"filters not aligned | LONG={long_score}, SHORT={short_score}, "
+            f"RSI={rsi:.1f}, trend15="
+            f"{'bullish' if bull15 else 'bearish' if bear15 else 'flat'}, "
             f"trend5={'bullish' if bull5 else 'bearish' if bear5 else 'flat'}, "
             f"breakout={'up' if breakout_up else 'down' if breakout_down else 'none'}"
         )
@@ -452,36 +487,27 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     else:
         direction, score, evidence = "SHORT", short_score, evidence_short
 
-    stop_result, stop_reason = calculate_structure(
-        candles_5m, direction, atr, entry
-    )
+    stop_result, stop_reason = calculate_structure(candles_5m, direction, atr, entry)
     if stop_result is None:
         return None, stop_reason
 
     stop, risk, stop_distance = stop_result
 
     if direction == "LONG":
-        targets = [
-            entry + risk * TP1_RR,
-            entry + risk * TP2_RR,
-            entry + risk * TP3_RR,
-        ]
-        resistance = max(c["high"] for c in candles_5m[-31:-1])
-        if entry < resistance < targets[0]:
-            return None, "TP1 obstructed by nearby resistance"
-        support = min(c["low"] for c in candles_5m[-31:-1])
+        targets = [entry + risk * x for x in (TP1_RR, TP2_RR, TP3_RR)]
     else:
-        targets = [
-            entry - risk * TP1_RR,
-            entry - risk * TP2_RR,
-            entry - risk * TP3_RR,
-        ]
-        support = min(c["low"] for c in candles_5m[-31:-1])
-        if targets[0] < support < entry:
-            return None, "TP1 obstructed by nearby support"
-        resistance = max(c["high"] for c in candles_5m[-31:-1])
+        targets = [entry - risk * x for x in (TP1_RR, TP2_RR, TP3_RR)]
 
-    if any(target <= 0 for target in targets):
+    reference_candles = candles_5m[-31:-1]
+    support = min(c["low"] for c in reference_candles)
+    resistance = max(c["high"] for c in reference_candles)
+
+    if direction == "LONG" and entry < resistance < targets[0]:
+        return None, "TP1 obstructed by nearby resistance"
+    if direction == "SHORT" and targets[0] < support < entry:
+        return None, "TP1 obstructed by nearby support"
+
+    if any(t <= 0 for t in targets):
         return None, "target price is invalid"
 
     if direction == "LONG":
@@ -491,7 +517,6 @@ def evaluate_signal(contract, candles_5m, candles_15m):
     if not valid:
         return None, "invalid stop/target ordering"
 
-    margin_loss = stop_distance * FIXED_LEVERAGE
     signal_id = f"kraken-linear-{contract}-{direction}-{last['time']}"
 
     signal = {
@@ -512,7 +537,7 @@ def evaluate_signal(contract, candles_5m, candles_15m):
         "volume_ratio": round(volume_ratio, 3),
         "leverage": FIXED_LEVERAGE,
         "stop_distance_percent": round(stop_distance, 4),
-        "estimated_margin_loss_percent": round(margin_loss, 3),
+        "estimated_margin_loss_percent": round(stop_distance * FIXED_LEVERAGE, 3),
         "risk_reward": {"tp1": TP1_RR, "tp2": TP2_RR, "tp3": TP3_RR},
         "support_reference": support,
         "resistance_reference": resistance,
@@ -533,10 +558,7 @@ def create_chart(signal):
     if len(candles) < 10:
         raise RuntimeError("Not enough candles to draw chart")
 
-    dates = [
-        datetime.fromtimestamp(c["time"], tz=timezone.utc)
-        for c in candles
-    ]
+    dates = [datetime.fromtimestamp(c["time"], tz=timezone.utc) for c in candles]
     x_values = mdates.date2num(dates)
     candle_width = (5 / (24 * 60)) * 0.68
 
@@ -547,45 +569,28 @@ def create_chart(signal):
 
     for i, candle in enumerate(candles):
         x = x_values[i]
-        opened = candle["open"]
-        high = candle["high"]
-        low = candle["low"]
-        closed = candle["close"]
+        opened, high = candle["open"], candle["high"]
+        low, closed = candle["low"], candle["close"]
         color = "#00b894" if closed >= opened else "#e74c3c"
 
         ax.vlines(x, low, high, color=color, linewidth=1.2, zorder=2)
-        body_height = abs(closed - opened)
-        if body_height == 0:
-            body_height = max(abs(closed) * 0.00002, 1e-12)
-
+        body_height = max(abs(closed - opened), abs(closed) * 0.00002, 1e-12)
         ax.add_patch(patches.Rectangle(
             (x - candle_width / 2, min(opened, closed)),
             candle_width, body_height,
             facecolor=color, edgecolor=color, linewidth=0.8, zorder=3,
         ))
-        volume_ax.bar(
-            x, candle["volume"], width=candle_width, color=color, alpha=0.8
-        )
+        volume_ax.bar(x, candle["volume"], width=candle_width, color=color, alpha=0.8)
 
-    entry = signal["entry"]
-    stop = signal["stop_loss"]
-    targets = signal["targets"]
+    ax.axhline(signal["entry"], color="#2980b9", linewidth=1.8,
+               label=f"ENTRY {fmt(signal['entry'])}")
+    ax.axhline(signal["stop_loss"], color="#e74c3c", linestyle="--",
+               linewidth=1.8, label=f"STOP {fmt(signal['stop_loss'])}")
 
-    ax.axhline(
-        entry, color="#2980b9", linewidth=1.8,
-        label=f"ENTRY {fmt(entry)}",
-    )
-    ax.axhline(
-        stop, color="#e74c3c", linestyle="--", linewidth=1.8,
-        label=f"STOP {fmt(stop)}",
-    )
-
-    for i, target in enumerate(targets):
+    for i, target in enumerate(signal["targets"]):
         ax.axhline(
-            target,
-            color=["#27ae60", "#16a085", "#2ecc71"][i],
-            linestyle=":", linewidth=1.6,
-            label=f"TP{i + 1} {fmt(target)}",
+            target, color=["#27ae60", "#16a085", "#2ecc71"][i],
+            linestyle=":", linewidth=1.6, label=f"TP{i + 1} {fmt(target)}"
         )
 
     ax.set_title(
@@ -599,16 +604,12 @@ def create_chart(signal):
     ax.grid(True, alpha=0.22)
     volume_ax.grid(True, axis="y", alpha=0.18)
     ax.legend(loc="upper left", fontsize=8, ncol=2, framealpha=0.9)
-    volume_ax.xaxis.set_major_formatter(
-        mdates.DateFormatter("%H:%M", tz=timezone.utc)
-    )
-
+    volume_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M", tz=timezone.utc))
     fig.autofmt_xdate()
     fig.tight_layout()
+
     safe_symbol = signal["symbol"].replace("/", "_").replace(":", "_")
-    path = os.path.join(
-        CHART_DIR, f"{safe_symbol}_{signal['candle_time']}.png"
-    )
+    path = os.path.join(CHART_DIR, f"{safe_symbol}_{signal['candle_time']}.png")
     fig.savefig(path, dpi=180, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return path
@@ -634,7 +635,7 @@ def build_caption(signal):
         "Excludes fees, slippage, funding and liquidation effects.\n\n"
         f"📊 Signal score: {signal['score']}\n"
         f"📉 5m RSI: {signal['rsi']}\n"
-        f"📦 Closed-candle volume ratio: {signal['volume_ratio']}x\n"
+        f"📦 3-candle volume ratio: {signal['volume_ratio']}x\n"
         f"🧱 Support reference: {fmt(signal['support_reference'])}\n"
         f"🧱 Resistance reference: {fmt(signal['resistance_reference'])}\n\n"
         f"🔎 Evidence:\n{evidence}\n\n"
@@ -647,28 +648,27 @@ def build_caption(signal):
 def scan_market(instrument):
     contract = instrument["contract"]
     symbol = instrument["symbol"]
-
     try:
         candles_5m = fetch_futures_candles(contract, "5m")
-        time.sleep(0.25)
+        time.sleep(0.2)
         candles_15m = fetch_futures_candles(contract, "15m")
         signal, reason = evaluate_signal(contract, candles_5m, candles_15m)
         print(f"DIAGNOSTIC {symbol} ({contract}): {reason}")
         return signal
-
     except Exception as exc:
         print(f"DIAGNOSTIC {symbol} ({contract}): DATA/API ERROR: {exc}")
         return None
 
 
 def main():
-    print("Starting Crypto Edge Kraken Futures Scalp Engine v4.1 DIAGNOSTIC")
+    print("Starting Crypto Edge Kraken Futures Scalp Engine v5")
     print("UTC:", now_utc())
-    print("Market mode: FUTURES ONLY")
-    print(f"Fixed suggested leverage: {FIXED_LEVERAGE:.0f}x")
+    print("Market mode: FUTURES ONLY | Paper trading")
+    print(f"Suggested leverage: {FIXED_LEVERAGE:.0f}x")
     print("Entry timeframe: 5m | Trend timeframe: 15m")
     print("Chart: real OHLC candlesticks + volume")
-    print("Diagnostic mode: rejection reasons enabled; thresholds unchanged.")
+    print("Volume check: latest 3 closed candles vs previous 20")
+    print("No real orders are placed.")
 
     state = load_state()
     sent_ids = set(state.get("sent", []))
@@ -677,7 +677,7 @@ def main():
         saved_signals = []
 
     universe = fetch_futures_universe()
-    print("Eligible Futures contracts:", len(universe))
+    print("Eligible Futures contracts selected:", len(universe))
 
     attempted = 0
     sent_count = 0
@@ -687,7 +687,7 @@ def main():
         signal = scan_market(instrument)
 
         if signal is None:
-            time.sleep(0.25)
+            time.sleep(0.2)
             continue
 
         if signal["signal_id"] in sent_ids:
@@ -713,7 +713,7 @@ def main():
                 f"SL distance={signal['stop_distance_percent']}%"
             )
 
-        time.sleep(0.35)
+        time.sleep(0.3)
         if sent_count >= MAX_SIGNALS_PER_RUN:
             break
 
