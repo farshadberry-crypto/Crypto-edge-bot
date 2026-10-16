@@ -1,23 +1,24 @@
 {
   "sent": [
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
+    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
     "kraken-linear-PF_RSRUSD-LONG-1792107000",
     "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
     "kraken-linear-PF_SHIBUSD-LONG-1792129800",
     "kraken-linear-PF_PENGUUSD-LONG-1792134000",
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-spot-SUI/USD-LONG-1792103400",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
     "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_NEIROUSD-SHORT-1792115700"
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-spot-SUI/USD-LONG-1792103400"
   ],
   "signals": [
     {
@@ -606,7 +607,39 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T07:09:47.359844+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_STRKUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_STRKUSD",
+      "direction": "SHORT",
+      "entry": 0.08072,
+      "stop_loss": 0.08150295848608893,
+      "targets": [
+        0.07993704151391107,
+        0.07931067472503991,
+        0.07868430793616878
+      ],
+      "score": 5,
+      "rsi": 26.27,
+      "atr": 0.0005592560614920984,
+      "volume_ratio": 0.382,
+      "leverage": 1.03,
+      "stop_distance_percent": 0.97,
+      "estimated_margin_loss_percent": 1.0,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792136100,
+      "evidence": [
+        "15m EMA trend is bearish",
+        "Price broke below the previous 20 closed 5m candles",
+        "Latest closed 5m candle closed below the prior close"
+      ],
+      "created_at": "2026-10-16T07:43:26.946067+00:00"
     }
   ],
-  "updated_at": "2026-10-16T07:09:49.257604+00:00"
+  "updated_at": "2026-10-16T07:43:30.314640+00:00"
 }
