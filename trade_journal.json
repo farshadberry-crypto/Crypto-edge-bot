@@ -239,17 +239,19 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-15T23:14:01.819195+00:00",
-      "status": "WAITING_ENTRY",
+      "status": "CANCELLED",
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
       "last_checked_at": "2026-10-16T11:15:05.129552+00:00",
       "targets_hit": [],
       "exits": [],
-      "remaining_fraction": 1.0,
+      "remaining_fraction": 0.0,
       "realized_pnl_percent": 0.0,
       "messages_sent": [],
-      "result": null
+      "result": null,
+      "cancelled_at": "2026-10-16T11:16:21.164213+00:00",
+      "cancel_reason": "STRK/USD: legacy score 5 below 6"
     },
     {
       "signal_id": "kraken-linear-PF_RSRUSD-LONG-1792107000",
@@ -1234,7 +1236,7 @@
       "entry_confirmed_at": "2026-10-16T09:16:01.661445+00:00",
       "confirmed_entry_price": 5.156e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:15:09.752137+00:00",
+      "last_checked_at": "2026-10-16T11:16:21.373075+00:00",
       "targets_hit": [
         "TP1",
         "TP2"
@@ -1498,7 +1500,7 @@
       "entry_confirmed_at": "2026-10-16T11:15:10.876852+00:00",
       "confirmed_entry_price": 0.08264,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:15:11.035169+00:00",
+      "last_checked_at": "2026-10-16T11:16:21.664563+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1510,5 +1512,5 @@
       "entry_confirmation_method": "closed_1m_candle_entry_zone_touch"
     }
   ],
-  "updated_at": "2026-10-16T11:15:11.185310+00:00"
+  "updated_at": "2026-10-16T11:16:21.814711+00:00"
 }
