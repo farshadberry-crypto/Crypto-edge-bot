@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 SIGNALS_FILE = "scalp_signals.json"
 JOURNAL_FILE = "trade_journal.json"
 
+MIN_LEVERAGE = 1.0
 MAX_LEVERAGE = 5.0
 
 
@@ -37,7 +38,6 @@ def normalize_signal(signal):
     direction = signal.get("direction")
     market_type = signal.get("market_type")
 
-    # New engine is futures-only.
     if category != "linear" or market_type != "futures":
         return None
 
@@ -58,16 +58,19 @@ def normalize_signal(signal):
     except (KeyError, TypeError, ValueError):
         return None
 
-    if entry <= 0 or stop <= 0 or len(targets) != 3:
+    if not all(
+        map(
+            lambda value: value > 0 and value < float("inf"),
+            [entry, stop, leverage, stop_distance_percent,
+             estimated_margin_loss_percent] + targets,
+        )
+    ):
+        return None
+
+    if len(targets) != 3:
         return None
 
     if not MIN_LEVERAGE <= leverage <= MAX_LEVERAGE:
-        return None
-
-    if stop_distance_percent <= 0:
-        return None
-
-    if estimated_margin_loss_percent <= 0:
         return None
 
     if direction == "LONG":
@@ -77,15 +80,29 @@ def normalize_signal(signal):
         if not targets[2] < targets[1] < targets[0] < entry < stop:
             return None
 
+    actual_stop_distance = abs(entry - stop) / entry * 100
+
+    # Reject risk metadata that materially disagrees with the prices.
+    if abs(actual_stop_distance - stop_distance_percent) > max(
+        0.15, actual_stop_distance * 0.10
+    ):
+        return None
+
+    expected_margin_loss = actual_stop_distance * leverage
+
+    if abs(
+        expected_margin_loss - estimated_margin_loss_percent
+    ) > max(0.25, expected_margin_loss * 0.15):
+        return None
+
     signal_id = signal.get("signal_id")
     symbol = signal.get("symbol")
     exchange_symbol = signal.get("exchange_symbol")
 
-    # Never guess the exchange contract identifier.
     if not signal_id or not symbol or not exchange_symbol:
         return None
 
-    if signal.get("exchange") != "kraken":
+    if str(signal.get("exchange", "")).lower() != "kraken":
         return None
 
     return {
@@ -101,10 +118,8 @@ def normalize_signal(signal):
         "stop_loss": stop,
         "targets": targets,
         "leverage": leverage,
-        "stop_distance_percent": stop_distance_percent,
-        "estimated_margin_loss_percent": (
-            estimated_margin_loss_percent
-        ),
+        "stop_distance_percent": actual_stop_distance,
+        "estimated_margin_loss_percent": expected_margin_loss,
         "score": signal.get("score"),
         "rsi": signal.get("rsi"),
         "atr": signal.get("atr"),
@@ -164,6 +179,7 @@ def main():
 
     added = 0
     skipped = 0
+    duplicates = 0
 
     for signal in signals:
         if not isinstance(signal, dict):
@@ -173,12 +189,11 @@ def main():
         trade = normalize_signal(signal)
 
         if trade is None:
-            # Old Spot signals and old signals without leverage fields
-            # are ignored rather than registered as new trades.
             skipped += 1
             continue
 
         if trade["signal_id"] in existing_ids:
+            duplicates += 1
             continue
 
         trades.append(trade)
@@ -187,7 +202,8 @@ def main():
 
         print(
             f"Registered: {trade['symbol']} {trade['direction']} "
-            f"leverage={trade['leverage']}x"
+            f"leverage={trade['leverage']:.1f}x "
+            f"stop_distance={trade['stop_distance_percent']:.3f}%"
         )
 
     journal["trades"] = trades
@@ -196,6 +212,7 @@ def main():
 
     print("New Futures trades registered:", added)
     print("Invalid or non-Futures signals skipped:", skipped)
+    print("Duplicate signals skipped:", duplicates)
     print("Total journal records:", len(trades))
 
 
