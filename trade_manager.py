@@ -6,14 +6,12 @@ import requests
 from datetime import datetime, timezone
 
 # =========================================================
-# CRYPTO EDGE TRADE MANAGER
-# Kraken Spot + Kraken Futures
+# CRYPTO EDGE FUTURES TRADE MANAGER
+# Kraken Futures only
 # Paper tracking only. No real orders are placed.
 # =========================================================
 
-SPOT_BASE_URL = "https://api.kraken.com/0/public"
 FUTURES_BASE_URL = "https://futures.kraken.com/derivatives/api/v3"
-
 JOURNAL_FILE = "trade_journal.json"
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -21,10 +19,12 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
 
 ENTRY_ZONE_PERCENT = 0.15
 TP_ALLOCATIONS = [0.40, 0.30, 0.30]
+MAX_LEVERAGE = 5.0
+MIN_LEVERAGE = 1.0
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    "User-Agent": "CryptoEdge-TradeManager/2.0",
+    "User-Agent": "CryptoEdge-Futures-TradeManager/3.0",
     "Accept": "application/json",
 })
 
@@ -56,40 +56,12 @@ def save_journal(journal):
     os.replace(temporary_file, JOURNAL_FILE)
 
 
-def get_spot_price(pair):
-    if not pair:
-        raise RuntimeError("Missing Kraken Spot pair identifier.")
-
-    response = SESSION.get(
-        f"{SPOT_BASE_URL}/Ticker",
-        params={"pair": pair},
-        timeout=20,
+def is_futures_trade(trade):
+    return (
+        str(trade.get("market_type", "")).lower() == "futures"
+        or str(trade.get("category", "")).lower() == "linear"
+        or str(trade.get("market", "")).upper() == "FUTURES"
     )
-    response.raise_for_status()
-
-    payload = response.json()
-    errors = payload.get("error", [])
-
-    if errors:
-        raise RuntimeError("Kraken Spot API: " + "; ".join(errors))
-
-    result = payload.get("result", {})
-
-    if not result:
-        raise RuntimeError(f"No Kraken Spot ticker returned for {pair}")
-
-    ticker = next(iter(result.values()))
-    last_trade = ticker.get("c", [])
-
-    if not last_trade:
-        raise RuntimeError(f"Missing last-trade price for {pair}")
-
-    price = float(last_trade[0])
-
-    if price <= 0:
-        raise RuntimeError(f"Invalid Spot price for {pair}: {price}")
-
-    return price
 
 
 def get_futures_price(symbol):
@@ -115,15 +87,13 @@ def get_futures_price(symbol):
     ticker = next(
         (
             item for item in tickers
-            if item.get("symbol", "").upper() == symbol.upper()
+            if str(item.get("symbol", "")).upper() == str(symbol).upper()
         ),
         None,
     )
 
     if ticker is None:
-        raise RuntimeError(
-            f"Kraken Futures contract not found: {symbol}"
-        )
+        raise RuntimeError(f"Kraken Futures contract not found: {symbol}")
 
     raw_price = ticker.get("last")
 
@@ -131,50 +101,34 @@ def get_futures_price(symbol):
         raw_price = ticker.get("markPrice")
 
     if raw_price is None:
-        raise RuntimeError(
-            f"No usable last/mark price for contract {symbol}"
-        )
+        raise RuntimeError(f"No usable last/mark price for {symbol}")
 
     price = float(raw_price)
 
     if price <= 0:
-        raise RuntimeError(
-            f"Invalid Futures price for {symbol}: {price}"
-        )
+        raise RuntimeError(f"Invalid Futures price for {symbol}: {price}")
 
     return price
 
 
 def get_price(trade):
-    exchange = str(trade.get("exchange", "")).lower()
-    market_type = str(
-        trade.get("market_type", "")
-    ).lower()
+    if not is_futures_trade(trade):
+        raise RuntimeError("This manager only processes Futures trades.")
 
-    exchange_symbol = trade.get("exchange_symbol")
+    exchange = str(trade.get("exchange", "")).lower()
 
     if exchange != "kraken":
         raise RuntimeError(
-            f"Unsupported exchange '{exchange}'. "
-            "Only Kraken trades are accepted by this manager."
+            f"Unsupported exchange '{exchange}'. Only Kraken Futures "
+            "contracts are supported."
         )
 
-    if not exchange_symbol:
-        raise RuntimeError(
-            "Missing exchange_symbol. The signal engine must "
-            "save the exact Kraken market or contract identifier."
-        )
+    symbol = trade.get("exchange_symbol")
 
-    if market_type == "spot" or trade.get("category") == "spot":
-        return get_spot_price(exchange_symbol)
+    if not symbol:
+        raise RuntimeError("Missing exact Kraken Futures exchange_symbol.")
 
-    if market_type == "futures" or trade.get("category") == "linear":
-        return get_futures_price(exchange_symbol)
-
-    raise RuntimeError(
-        f"Unsupported market type '{market_type}' "
-        f"for {trade.get('symbol', 'unknown')}."
-    )
+    return get_futures_price(symbol)
 
 
 def send_telegram(message):
@@ -208,11 +162,54 @@ def send_telegram(message):
 
 
 def fmt(price):
+    price = float(price)
+
     if price >= 1000:
         return f"{price:,.2f}"
     if price >= 1:
         return f"{price:.4f}"
     return f"{price:.7f}"
+
+
+def get_leverage(trade):
+    try:
+        leverage = float(trade.get("leverage", MIN_LEVERAGE))
+    except (TypeError, ValueError):
+        leverage = MIN_LEVERAGE
+
+    return max(MIN_LEVERAGE, min(MAX_LEVERAGE, leverage))
+
+
+def get_stop_risk_on_margin(trade):
+    try:
+        stored_risk = float(trade.get("estimated_margin_loss_percent", 0))
+        if stored_risk > 0:
+            return stored_risk
+    except (TypeError, ValueError):
+        pass
+
+    try:
+        entry = float(trade["entry"])
+        stop = float(trade["stop_loss"])
+
+        if entry <= 0:
+            return 0.0
+
+        stop_distance_percent = abs(entry - stop) / entry * 100
+        return stop_distance_percent * get_leverage(trade)
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return 0.0
+
+
+def leverage_summary(trade):
+    leverage = get_leverage(trade)
+    stop_risk = get_stop_risk_on_margin(trade)
+
+    return (
+        f"⚙️ Suggested leverage: {leverage:.1f}x\n"
+        f"⚠️ Estimated margin loss at SL: {stop_risk:.2f}%\n"
+        "Estimate excludes fees, slippage, funding and liquidation effects."
+    )
 
 
 def entry_zone(trade):
@@ -227,15 +224,19 @@ def crossed_entry(trade, price):
 
 
 def is_stop_hit(trade, price):
+    stop = float(trade["stop_loss"])
+
     if trade["direction"] == "LONG":
-        return price <= float(trade["stop_loss"])
-    return price >= float(trade["stop_loss"])
+        return price <= stop
+
+    return price >= stop
 
 
 def is_target_hit(trade, price, target):
     if trade["direction"] == "LONG":
-        return price >= float(target)
-    return price <= float(target)
+        return price >= target
+
+    return price <= target
 
 
 def pnl_percent(trade, exit_price):
@@ -263,6 +264,16 @@ def initialize_trade(trade):
     trade.setdefault("realized_pnl_percent", 0.0)
     trade.setdefault("messages_sent", [])
     trade.setdefault("result", None)
+
+    if not isinstance(trade["targets_hit"], list):
+        trade["targets_hit"] = []
+
+    if not isinstance(trade["exits"], list):
+        trade["exits"] = []
+
+    if not isinstance(trade["messages_sent"], list):
+        trade["messages_sent"] = []
+
     return trade
 
 
@@ -282,18 +293,19 @@ def open_trade(trade, price):
     low, high = entry_zone(trade)
 
     message = (
-        "🟢 CRYPTO EDGE | TRADE OPENED\n\n"
-        f"🏦 Market: {trade['market']}\n"
+        "🟢 CRYPTO EDGE | FUTURES TRADE OPENED\n\n"
+        f"🏦 Market: FUTURES\n"
         f"🪙 Coin: {trade['symbol']}\n"
         f"📈 Direction: {trade['direction']}\n"
-        f"🎯 Planned entry: {fmt(float(trade['entry']))}\n"
+        f"🎯 Planned entry: {fmt(trade['entry'])}\n"
         f"✅ Observed entry-zone price: {fmt(price)}\n"
         f"📍 Entry zone: {fmt(low)} - {fmt(high)}\n"
-        f"🛑 Stop loss: {fmt(float(trade['stop_loss']))}\n"
-        f"💰 TP1: {fmt(float(trade['targets'][0]))}\n"
-        f"💰 TP2: {fmt(float(trade['targets'][1]))}\n"
-        f"💰 TP3: {fmt(float(trade['targets'][2]))}\n\n"
-        "📒 Paper-trade tracking only. No real order was placed."
+        f"🛑 Stop loss: {fmt(trade['stop_loss'])}\n"
+        f"💰 TP1: {fmt(trade['targets'][0])}\n"
+        f"💰 TP2: {fmt(trade['targets'][1])}\n"
+        f"💰 TP3: {fmt(trade['targets'][2])}\n\n"
+        f"{leverage_summary(trade)}\n\n"
+        "📒 Paper tracking only. No real order was placed."
     )
 
     notify_once(trade, "opened", message)
@@ -320,6 +332,10 @@ def close_remaining(trade, price, reason):
     trade["closed_at"] = now_utc()
 
     total = float(trade["realized_pnl_percent"])
+    leverage = get_leverage(trade)
+    estimated_margin_return = total * leverage
+
+    trade["estimated_margin_return_percent"] = estimated_margin_return
     trade["result"] = (
         "WIN" if total > 0
         else "LOSS" if total < 0
@@ -327,23 +343,26 @@ def close_remaining(trade, price, reason):
     )
 
     message = (
-        "🏁 CRYPTO EDGE | TRADE CLOSED\n\n"
-        f"🏦 Market: {trade['market']}\n"
+        "🏁 CRYPTO EDGE | FUTURES TRADE CLOSED\n\n"
         f"🪙 Coin: {trade['symbol']}\n"
         f"📈 Direction: {trade['direction']}\n"
         f"📌 Reason: {reason}\n"
         f"💵 Observed exit price: {fmt(price)}\n"
-        f"📊 Estimated realized return: {total:+.3f}%\n"
+        f"⚙️ Suggested leverage: {leverage:.1f}x\n"
+        f"📊 Estimated underlying return: {total:+.3f}%\n"
+        f"💹 Estimated return on allocated margin: "
+        f"{estimated_margin_return:+.3f}%\n"
         f"📋 Result: {trade['result']}\n\n"
-        "⚠️ Paper-trade estimate, before fees, slippage and funding."
+        "⚠️ Paper-trade estimates before fees, slippage, funding "
+        "and liquidation effects. Not an actual account return."
     )
 
     notify_once(trade, "closed", message)
 
 
 def process_open_trade(trade, price):
-    # Ticker polling cannot prove the order of price movements
-    # between scans. This is a paper-trading estimate.
+    # Periodic ticker polling cannot establish the exact order of
+    # price movements between scans. This is only a paper estimate.
 
     if is_stop_hit(trade, price):
         close_remaining(trade, price, "STOP LOSS")
@@ -351,6 +370,7 @@ def process_open_trade(trade, price):
 
     targets = trade["targets"]
     targets_hit = set(trade["targets_hit"])
+    leverage = get_leverage(trade)
 
     for index, target in enumerate(targets):
         key = f"TP{index + 1}"
@@ -358,7 +378,9 @@ def process_open_trade(trade, price):
         if key in targets_hit:
             continue
 
-        if not is_target_hit(trade, price, float(target)):
+        target = float(target)
+
+        if not is_target_hit(trade, price, target):
             continue
 
         allocation = min(
@@ -369,33 +391,41 @@ def process_open_trade(trade, price):
         if allocation <= 0:
             continue
 
-        move = pnl_percent(trade, float(target))
+        move = pnl_percent(trade, target)
         trade["realized_pnl_percent"] += move * allocation
         trade["remaining_fraction"] -= allocation
         trade["targets_hit"].append(key)
 
         trade["exits"].append({
             "time": now_utc(),
-            "price": float(target),
+            "price": target,
             "fraction": allocation,
             "pnl_percent": move,
             "reason": key,
         })
 
+        accumulated = float(trade["realized_pnl_percent"])
+        accumulated_margin_return = accumulated * leverage
+        portion_margin_return = move * leverage
+
         message = (
-            f"💰 CRYPTO EDGE | {key} HIT\n\n"
+            f"💰 CRYPTO EDGE | FUTURES {key} HIT\n\n"
             f"🪙 Coin: {trade['symbol']}\n"
-            f"🏦 Market: {trade['market']}\n"
             f"📈 Direction: {trade['direction']}\n"
-            f"🎯 Target price: {fmt(float(target))}\n"
+            f"🎯 Target price: {fmt(target)}\n"
+            f"⚙️ Suggested leverage: {leverage:.1f}x\n"
             f"📤 Suggested paper exit: {allocation * 100:.0f}% "
             "of original position\n"
             f"📦 Remaining position: "
             f"{trade['remaining_fraction'] * 100:.0f}%\n"
-            f"📊 Return on this portion: {move:+.3f}%\n"
-            f"🧾 Accumulated estimated return: "
-            f"{trade['realized_pnl_percent']:+.3f}%\n\n"
-            "Paper-trade update only. No real order was executed."
+            f"📊 Underlying move at target: {move:+.3f}%\n"
+            f"💹 Estimated leveraged move on exited portion: "
+            f"{portion_margin_return:+.3f}%\n"
+            f"🧾 Accumulated underlying return: {accumulated:+.3f}%\n"
+            f"📈 Accumulated estimated margin return: "
+            f"{accumulated_margin_return:+.3f}%\n\n"
+            "Paper-trade update only. No real order was executed. "
+            "Estimates exclude fees, slippage and funding."
         )
 
         notify_once(trade, key, message)
@@ -406,6 +436,9 @@ def process_open_trade(trade, price):
         trade["closed_at"] = now_utc()
 
         total = float(trade["realized_pnl_percent"])
+        estimated_margin_return = total * leverage
+
+        trade["estimated_margin_return_percent"] = estimated_margin_return
         trade["result"] = (
             "WIN" if total > 0
             else "LOSS" if total < 0
@@ -415,47 +448,63 @@ def process_open_trade(trade, price):
         notify_once(
             trade,
             "closed",
-            "🏁 CRYPTO EDGE | ALL TARGETS COMPLETED\n\n"
+            "🏁 CRYPTO EDGE | ALL FUTURES TARGETS COMPLETED\n\n"
             f"🪙 Coin: {trade['symbol']}\n"
-            f"🏦 Market: {trade['market']}\n"
-            f"📊 Estimated realized return: {total:+.3f}%\n"
+            f"📈 Direction: {trade['direction']}\n"
+            f"⚙️ Suggested leverage: {leverage:.1f}x\n"
+            f"📊 Estimated underlying return: {total:+.3f}%\n"
+            f"💹 Estimated return on allocated margin: "
+            f"{estimated_margin_return:+.3f}%\n"
             f"📋 Result: {trade['result']}\n\n"
-            "Paper-trade estimate, before fees and slippage.",
+            "Paper-trade estimate before fees, slippage, funding "
+            "and liquidation effects. No real order was placed."
         )
 
 
-def calculate_stats(trades, market=None):
-    closed = [
+def calculate_stats(trades):
+    futures_closed = [
         trade for trade in trades
-        if trade.get("status") == "CLOSED"
-        and (market is None or trade.get("market") == market)
+        if isinstance(trade, dict)
+        and is_futures_trade(trade)
+        and trade.get("status") == "CLOSED"
     ]
 
     wins = sum(
-        1 for trade in closed
+        1 for trade in futures_closed
         if float(trade.get("realized_pnl_percent", 0)) > 0
     )
     losses = sum(
-        1 for trade in closed
+        1 for trade in futures_closed
         if float(trade.get("realized_pnl_percent", 0)) < 0
     )
 
-    total = len(closed)
+    total = len(futures_closed)
     win_rate = wins / total * 100 if total else 0.0
 
     total_return = sum(
         float(trade.get("realized_pnl_percent", 0))
-        for trade in closed
+        for trade in futures_closed
+    )
+
+    total_margin_return = sum(
+        float(
+            trade.get(
+                "estimated_margin_return_percent",
+                float(trade.get("realized_pnl_percent", 0))
+                * get_leverage(trade),
+            )
+        )
+        for trade in futures_closed
     )
 
     gross_profit = sum(
         max(0.0, float(trade.get("realized_pnl_percent", 0)))
-        for trade in closed
+        for trade in futures_closed
     )
 
     gross_loss = abs(sum(
         min(0.0, float(trade.get("realized_pnl_percent", 0)))
-        for trade in closed
+        for trade in futures_closed
     ))
 
     profit_factor = (
@@ -465,23 +514,34 @@ def calculate_stats(trades, market=None):
     )
 
     return {
-        "closed": total,
+        "closed_futures": total,
         "wins": wins,
         "losses": losses,
-        "win_rate": win_rate,
-        "total_return_percent": total_return,
-        "profit_factor": profit_factor,
+        "win_rate_percent": round(win_rate, 2),
+        "total_underlying_return_percent": round(total_return, 3),
+        "estimated_total_margin_return_percent": round(
+            total_margin_return, 3
+        ),
+        "profit_factor": (
+            round(profit_factor, 3)
+            if profit_factor is not None
+            else None
+        ),
     }
 
 
 def main():
-    print("Crypto Edge Kraken Trade Manager started:", now_utc())
+    print("Crypto Edge Futures Trade Manager started:", now_utc())
 
     journal = load_journal()
     trades = journal["trades"]
 
     for trade in trades:
         if not isinstance(trade, dict):
+            continue
+
+        # Old Spot records remain in the journal but are not processed.
+        if not is_futures_trade(trade):
             continue
 
         initialize_trade(trade)
@@ -499,8 +559,9 @@ def main():
                 else:
                     low, high = entry_zone(trade)
                     print(
-                        f"Waiting: {trade['symbol']} "
-                        f"market={trade.get('market')} "
+                        f"Waiting Futures: {trade['symbol']} "
+                        f"direction={trade.get('direction')} "
+                        f"leverage={get_leverage(trade):.1f}x "
                         f"price={fmt(price)} "
                         f"entry_zone={fmt(low)}-{fmt(high)}"
                     )
@@ -510,7 +571,7 @@ def main():
 
         except Exception as exc:
             print(
-                f"Trade manager error for "
+                f"Futures manager error for "
                 f"{trade.get('symbol', 'unknown')}: {exc}"
             )
 
@@ -520,10 +581,8 @@ def main():
     journal["updated_at"] = now_utc()
     save_journal(journal)
 
-    print("Closed-trade statistics:")
-    print("All markets:", calculate_stats(trades))
-    print("Spot:", calculate_stats(trades, "SPOT"))
-    print("Futures:", calculate_stats(trades, "FUTURES"))
+    print("Closed Futures statistics:")
+    print(json.dumps(calculate_stats(trades), ensure_ascii=False, indent=2))
     print("Manager scan completed.")
 
 
