@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:12.647442+00:00",
+      "last_checked_at": "2026-10-16T05:56:38.148222+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -409,7 +409,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:14.535942+00:00",
+      "last_checked_at": "2026-10-16T05:56:38.525440+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -554,7 +554,7 @@
       "entry_confirmed_at": "2026-10-16T04:00:24.138154+00:00",
       "confirmed_entry_price": 0.08493,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:14.892390+00:00",
+      "last_checked_at": "2026-10-16T05:56:38.895673+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -597,7 +597,7 @@
       "entry_confirmed_at": "2026-10-16T04:28:08.409629+00:00",
       "confirmed_entry_price": 0.002076,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:15.295751+00:00",
+      "last_checked_at": "2026-10-16T05:56:39.302943+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -640,7 +640,7 @@
       "entry_confirmed_at": "2026-10-16T04:28:08.914877+00:00",
       "confirmed_entry_price": 0.0007012,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:15.697945+00:00",
+      "last_checked_at": "2026-10-16T05:56:39.735246+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -683,7 +683,7 @@
       "entry_confirmed_at": "2026-10-16T05:00:11.511545+00:00",
       "confirmed_entry_price": 5.133e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T05:27:16.051048+00:00",
+      "last_checked_at": "2026-10-16T05:56:40.162425+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -703,7 +703,93 @@
         "TP1"
       ],
       "result": null
+    },
+    {
+      "signal_id": "kraken-linear-PF_PEPEUSD-LONG-1792129800",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_PEPEUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_PEPEUSD",
+      "direction": "LONG",
+      "entry": 4.1465e-06,
+      "stop_loss": 4.136348766275438e-06,
+      "targets": [
+        4.156651233724562e-06,
+        4.164772220704212e-06,
+        4.172893207683861e-06
+      ],
+      "score": 5,
+      "rsi": 65.41,
+      "atr": 7.25088123183003e-09,
+      "volume_ratio": 3.103,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792129800,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (65.4)",
+        "Volume is 3.10x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T05:56:34.304006+00:00",
+      "status": "OPEN",
+      "entry_confirmed_at": "2026-10-16T05:56:40.540621+00:00",
+      "confirmed_entry_price": 4.1472e-06,
+      "closed_at": null,
+      "last_checked_at": "2026-10-16T05:56:40.540600+00:00",
+      "targets_hit": [],
+      "exits": [],
+      "remaining_fraction": 1.0,
+      "realized_pnl_percent": 0.0,
+      "messages_sent": [
+        "opened"
+      ],
+      "result": null
+    },
+    {
+      "signal_id": "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_SHIBUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_SHIBUSD",
+      "direction": "LONG",
+      "entry": 5.146e-06,
+      "stop_loss": 5.136033073921842e-06,
+      "targets": [
+        5.155966926078159e-06,
+        5.163940466940686e-06,
+        5.171914007803213e-06
+      ],
+      "score": 5,
+      "rsi": 55.86,
+      "atr": 7.119232912970733e-09,
+      "volume_ratio": 14.565,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792129800,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (55.9)",
+        "Volume is 14.57x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T05:56:36.476947+00:00",
+      "status": "OPEN",
+      "entry_confirmed_at": "2026-10-16T05:56:41.376960+00:00",
+      "confirmed_entry_price": 5.146e-06,
+      "closed_at": null,
+      "last_checked_at": "2026-10-16T05:56:41.376940+00:00",
+      "targets_hit": [],
+      "exits": [],
+      "remaining_fraction": 1.0,
+      "realized_pnl_percent": 0.0,
+      "messages_sent": [
+        "opened"
+      ],
+      "result": null
     }
   ],
-  "updated_at": "2026-10-16T05:27:16.425826+00:00"
+  "updated_at": "2026-10-16T05:56:41.753567+00:00"
 }

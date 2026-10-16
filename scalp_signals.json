@@ -1,18 +1,20 @@
 {
   "sent": [
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
-    "kraken-spot-HYPE/USD-LONG-1792103400",
     "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-linear-PF_RSRUSD-LONG-1792107000",
-    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
     "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
     "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
+    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
     "kraken-linear-PF_BOMEUSD-LONG-1792124400"
   ],
   "signals": [
@@ -470,7 +472,73 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T04:59:59.972448+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_PEPEUSD-LONG-1792129800",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_PEPEUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_PEPEUSD",
+      "direction": "LONG",
+      "entry": 4.1465e-06,
+      "stop_loss": 4.136348766275438e-06,
+      "targets": [
+        4.156651233724562e-06,
+        4.164772220704212e-06,
+        4.172893207683861e-06
+      ],
+      "score": 5,
+      "rsi": 65.41,
+      "atr": 7.25088123183003e-09,
+      "volume_ratio": 3.103,
+      "leverage": 4.08,
+      "stop_distance_percent": 0.245,
+      "estimated_margin_loss_percent": 1.0,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792129800,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (65.4)",
+        "Volume is 3.10x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T05:56:34.304006+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_SHIBUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_SHIBUSD",
+      "direction": "LONG",
+      "entry": 5.146e-06,
+      "stop_loss": 5.136033073921842e-06,
+      "targets": [
+        5.155966926078159e-06,
+        5.163940466940686e-06,
+        5.171914007803213e-06
+      ],
+      "score": 5,
+      "rsi": 55.86,
+      "atr": 7.119232912970733e-09,
+      "volume_ratio": 14.565,
+      "leverage": 5.0,
+      "stop_distance_percent": 0.194,
+      "estimated_margin_loss_percent": 0.968,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792129800,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (55.9)",
+        "Volume is 14.57x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T05:56:36.476947+00:00"
     }
   ],
-  "updated_at": "2026-10-16T05:27:12.126723+00:00"
+  "updated_at": "2026-10-16T05:56:37.677504+00:00"
 }
