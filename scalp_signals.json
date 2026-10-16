@@ -1,11 +1,11 @@
 {
   "sent": [
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
     "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_RSRUSD-LONG-1792107000",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
     "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
     "kraken-spot-HYPE/USD-LONG-1792103400"
   ],
   "signals": [
@@ -234,5 +234,5 @@
       "created_at": "2026-10-16T00:21:41.221785+00:00"
     }
   ],
-  "updated_at": "2026-10-16T00:21:49.926120+00:00"
+  "updated_at": "2026-10-16T01:02:07.923562+00:00"
 }
