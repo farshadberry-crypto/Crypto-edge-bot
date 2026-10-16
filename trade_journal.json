@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T10:47:06.706434+00:00",
+      "last_checked_at": "2026-10-16T10:53:20.111105+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -868,7 +868,7 @@
       "entry_confirmed_at": "2026-10-16T05:56:41.376960+00:00",
       "confirmed_entry_price": 5.146e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T10:47:08.148192+00:00",
+      "last_checked_at": "2026-10-16T10:53:20.211343+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -1212,7 +1212,7 @@
       "entry_confirmed_at": "2026-10-16T09:16:01.661445+00:00",
       "confirmed_entry_price": 5.156e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T10:47:08.531507+00:00",
+      "last_checked_at": "2026-10-16T10:53:20.311531+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1307,7 +1307,7 @@
       "entry_confirmed_at": "2026-10-16T10:16:08.443906+00:00",
       "confirmed_entry_price": 0.07799,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T10:47:08.976466+00:00",
+      "last_checked_at": "2026-10-16T10:53:20.411701+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -1364,7 +1364,7 @@
       "entry_confirmed_at": "2026-10-16T10:30:01.146451+00:00",
       "confirmed_entry_price": 0.07734,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T10:47:09.599832+00:00",
+      "last_checked_at": "2026-10-16T10:53:20.511888+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1375,5 +1375,5 @@
       "result": null
     }
   ],
-  "updated_at": "2026-10-16T10:47:09.799986+00:00"
+  "updated_at": "2026-10-16T10:53:20.612021+00:00"
 }
