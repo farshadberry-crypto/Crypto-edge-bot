@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T02:02:15.988622+00:00",
+      "last_checked_at": "2026-10-16T02:30:43.844512+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -332,16 +332,18 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T00:21:41.221785+00:00",
-      "status": "WAITING_ENTRY",
-      "entry_confirmed_at": null,
-      "confirmed_entry_price": null,
+      "status": "OPEN",
+      "entry_confirmed_at": "2026-10-16T02:30:44.159734+00:00",
+      "confirmed_entry_price": 5.125e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T02:02:16.518312+00:00",
+      "last_checked_at": "2026-10-16T02:30:44.159715+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
       "realized_pnl_percent": 0.0,
-      "messages_sent": [],
+      "messages_sent": [
+        "opened"
+      ],
       "result": null
     },
     {
@@ -377,7 +379,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T02:02:16.836652+00:00",
+      "last_checked_at": "2026-10-16T02:30:44.830091+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -414,19 +416,28 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T02:02:11.958317+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T02:02:17.146184+00:00",
       "confirmed_entry_price": 0.002041,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T02:02:17.146163+00:00",
+      "closed_at": "2026-10-16T02:30:45.151584+00:00",
+      "last_checked_at": "2026-10-16T02:30:45.151555+00:00",
       "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
-      "messages_sent": [
-        "opened"
+      "exits": [
+        {
+          "time": "2026-10-16T02:30:45.151579+00:00",
+          "price": 0.002052,
+          "fraction": 1.0,
+          "pnl_percent": -0.3913894324853324,
+          "reason": "STOP LOSS"
+        }
       ],
-      "result": null
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": -0.3913894324853324,
+      "messages_sent": [
+        "opened",
+        "closed"
+      ],
+      "result": "LOSS"
     },
     {
       "signal_id": "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
@@ -457,20 +468,29 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T02:02:14.486343+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T02:02:17.805754+00:00",
       "confirmed_entry_price": 7.791e-05,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T02:02:17.805734+00:00",
+      "closed_at": "2026-10-16T02:30:45.817556+00:00",
+      "last_checked_at": "2026-10-16T02:30:45.817528+00:00",
       "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
-      "messages_sent": [
-        "opened"
+      "exits": [
+        {
+          "time": "2026-10-16T02:30:45.817552+00:00",
+          "price": 7.872e-05,
+          "fraction": 1.0,
+          "pnl_percent": -1.0396611474778599,
+          "reason": "STOP LOSS"
+        }
       ],
-      "result": null
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": -1.0396611474778599,
+      "messages_sent": [
+        "opened",
+        "closed"
+      ],
+      "result": "LOSS"
     }
   ],
-  "updated_at": "2026-10-16T02:02:18.181907+00:00"
+  "updated_at": "2026-10-16T02:30:46.145692+00:00"
 }
