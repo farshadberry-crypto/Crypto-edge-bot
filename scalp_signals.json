@@ -1,27 +1,29 @@
 {
   "sent": [
-    "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
-    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
-    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
-    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
     "kraken-linear-PF_MOGUSD-LONG-1792140000",
-    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
-    "kraken-spot-SUI/USD-LONG-1792103400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
+    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
     "kraken-linear-PF_SHIBUSD-LONG-1792109700",
     "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
+    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
+    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
+    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
+    "kraken-linear-PF_BONKUSD-LONG-1792140000",
+    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
     "kraken-linear-PF_RSRUSD-SHORT-1792113900",
     "kraken-linear-PF_RSRUSD-LONG-1792107000",
-    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
-    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_BONKUSD-LONG-1792140000"
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_SHIBUSD-LONG-1792141800"
   ],
   "signals": [
     {
@@ -741,7 +743,72 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T09:15:49.885095+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_PUMPUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_PUMPUSD",
+      "direction": "SHORT",
+      "entry": 0.004431,
+      "stop_loss": 0.004448962537245652,
+      "targets": [
+        0.004413037462754348,
+        0.004398667432957826,
+        0.004384297403161304
+      ],
+      "score": 5,
+      "rsi": 29.85,
+      "atr": 1.283038374689435e-05,
+      "volume_ratio": 0.881,
+      "leverage": 2.47,
+      "stop_distance_percent": 0.405,
+      "estimated_margin_loss_percent": 1.0,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792145400,
+      "evidence": [
+        "15m EMA trend is bearish",
+        "Price broke below the previous 20 closed 5m candles",
+        "Latest closed 5m candle closed below the prior close"
+      ],
+      "created_at": "2026-10-16T10:15:57.103877+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_STRKUSD-SHORT-1792145400",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_STRKUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_STRKUSD",
+      "direction": "SHORT",
+      "entry": 0.0779,
+      "stop_loss": 0.07869188451411599,
+      "targets": [
+        0.077108115485884,
+        0.0764746078745912,
+        0.07584110026329842
+      ],
+      "score": 5,
+      "rsi": 34.4,
+      "atr": 0.0005656317957971417,
+      "volume_ratio": 1.854,
+      "leverage": 1.0,
+      "stop_distance_percent": 1.017,
+      "estimated_margin_loss_percent": 1.017,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792145400,
+      "evidence": [
+        "15m EMA trend is bearish",
+        "5m RSI supports bearish momentum (34.4)",
+        "Volume is 1.85x its previous 20-candle average",
+        "Latest closed 5m candle closed below the prior close"
+      ],
+      "created_at": "2026-10-16T10:16:02.411597+00:00"
     }
   ],
-  "updated_at": "2026-10-16T09:48:29.115310+00:00"
+  "updated_at": "2026-10-16T10:16:03.887533+00:00"
 }
