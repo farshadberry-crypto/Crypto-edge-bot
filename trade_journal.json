@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-15T23:57:49.632949+00:00",
+      "last_checked_at": "2026-10-16T00:21:50.513147+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -284,7 +284,7 @@
       "entry_confirmed_at": "2026-10-15T23:39:04.721807+00:00",
       "confirmed_entry_price": 0.0019557,
       "closed_at": null,
-      "last_checked_at": "2026-10-15T23:57:50.085828+00:00",
+      "last_checked_at": "2026-10-16T00:21:51.050400+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -293,7 +293,48 @@
         "opened"
       ],
       "result": null
+    },
+    {
+      "signal_id": "kraken-linear-PF_SHIBUSD-LONG-1792109700",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_SHIBUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_SHIBUSD",
+      "direction": "LONG",
+      "entry": 5.127e-06,
+      "stop_loss": 5.12205903048868e-06,
+      "targets": [
+        5.1319409695113206e-06,
+        5.135893745120377e-06,
+        5.139846520729433e-06
+      ],
+      "score": 5,
+      "rsi": 58.21,
+      "atr": 3.529263936657347e-09,
+      "volume_ratio": 5.021,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792109700,
+      "evidence": [
+        "15m EMA trend is bullish",
+        "5m RSI supports bullish momentum (58.2)",
+        "Volume is 5.02x its previous 20-candle average",
+        "Latest closed 5m candle closed above the prior close"
+      ],
+      "created_at": "2026-10-16T00:21:41.221785+00:00",
+      "status": "WAITING_ENTRY",
+      "entry_confirmed_at": null,
+      "confirmed_entry_price": null,
+      "closed_at": null,
+      "last_checked_at": "2026-10-16T00:21:51.588222+00:00",
+      "targets_hit": [],
+      "exits": [],
+      "remaining_fraction": 1.0,
+      "realized_pnl_percent": 0.0,
+      "messages_sent": [],
+      "result": null
     }
   ],
-  "updated_at": "2026-10-15T23:57:50.285985+00:00"
+  "updated_at": "2026-10-16T00:21:51.788368+00:00"
 }
