@@ -1507,21 +1507,32 @@
         "Latest closed 5m candle has bullish momentum"
       ],
       "created_at": "2026-10-16T11:15:01.247688+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T11:15:10.876852+00:00",
       "confirmed_entry_price": 0.08264,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T12:11:38.322130+00:00",
+      "closed_at": "2026-10-16T12:20:41.104730+00:00",
+      "last_checked_at": "2026-10-16T12:20:41.494082+00:00",
       "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
-      "messages_sent": [
-        "opened"
+      "exits": [
+        {
+          "time": "2026-10-16T12:20:41.104716+00:00",
+          "candle_time": 1792152900,
+          "price": 0.08189284726990492,
+          "fraction": 1.0,
+          "pnl_percent": -0.9041054333193157,
+          "reason": "STOP LOSS (conservative candle rule)"
+        }
       ],
-      "result": null,
-      "entry_confirmation_method": "closed_1m_candle_entry_zone_touch"
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": -0.9041054333193157,
+      "messages_sent": [
+        "opened",
+        "closed"
+      ],
+      "result": "LOSS",
+      "entry_confirmation_method": "closed_1m_candle_entry_zone_touch",
+      "estimated_margin_return_percent": -9.041054333193157
     }
   ],
-  "updated_at": "2026-10-16T12:11:38.472271+00:00"
+  "updated_at": "2026-10-16T12:20:41.644222+00:00"
 }
