@@ -1,13 +1,17 @@
 
 import json
 import os
+import math
 from datetime import datetime, timezone
 
 SIGNALS_FILE = "scalp_signals.json"
 JOURNAL_FILE = "trade_journal.json"
 
-MIN_LEVERAGE = 1.0
-MAX_LEVERAGE = 5.0
+FIXED_LEVERAGE = 10.0
+LEVERAGE_TOLERANCE = 0.001
+MIN_SCORE = 6
+MIN_VOLUME_RATIO = 1.20
+MAX_STOP_DISTANCE_PERCENT = 1.20
 
 
 def now_utc():
@@ -33,77 +37,98 @@ def save_json(path, data):
     os.replace(temporary, path)
 
 
+def display_symbol(exchange_symbol, fallback=""):
+    symbol = str(exchange_symbol or fallback).strip().upper()
+
+    for prefix in ("PF_", "PI_"):
+        if symbol.startswith(prefix):
+            symbol = symbol[len(prefix):]
+            break
+
+    for suffix in ("USDT", "USD", "USDC", "EUR", "GBP"):
+        if symbol.endswith(suffix) and len(symbol) > len(suffix):
+            base = symbol[:-len(suffix)]
+            if base == "XBT":
+                base = "BTC"
+            return f"{base}/{suffix}"
+
+    return symbol
+
+
+def finite_positive(value):
+    try:
+        number = float(value)
+        return math.isfinite(number) and number > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def normalize_signal(signal):
-    category = signal.get("category")
+    if not isinstance(signal, dict):
+        return None, "not an object"
+
+    if str(signal.get("exchange", "")).lower() != "kraken":
+        return None, "not Kraken"
+
+    if signal.get("market_type") != "futures":
+        return None, "not futures"
+
+    if signal.get("category") != "linear":
+        return None, "not linear"
+
     direction = signal.get("direction")
-    market_type = signal.get("market_type")
-
-    if category != "linear" or market_type != "futures":
-        return None
-
     if direction not in ("LONG", "SHORT"):
-        return None
+        return None, "invalid direction"
 
     try:
         entry = float(signal["entry"])
         stop = float(signal["stop_loss"])
         targets = [float(value) for value in signal["targets"]]
         leverage = float(signal["leverage"])
-        stop_distance_percent = float(
-            signal["stop_distance_percent"]
-        )
-        estimated_margin_loss_percent = float(
-            signal["estimated_margin_loss_percent"]
-        )
+        score = int(signal.get("score", 0))
+        volume_ratio = float(signal.get("volume_ratio", 0))
     except (KeyError, TypeError, ValueError):
-        return None
+        return None, "missing or invalid numeric fields"
 
-    if not all(
-        map(
-            lambda value: value > 0 and value < float("inf"),
-            [entry, stop, leverage, stop_distance_percent,
-             estimated_margin_loss_percent] + targets,
-        )
-    ):
-        return None
+    numbers = [entry, stop, leverage, volume_ratio] + targets
+    if not all(math.isfinite(value) for value in numbers):
+        return None, "non-finite number"
+
+    if not all(value > 0 for value in [entry, stop, leverage] + targets):
+        return None, "non-positive price or leverage"
 
     if len(targets) != 3:
-        return None
+        return None, "must have exactly three targets"
 
-    if not MIN_LEVERAGE <= leverage <= MAX_LEVERAGE:
-        return None
+    if abs(leverage - FIXED_LEVERAGE) > LEVERAGE_TOLERANCE:
+        return None, "leverage is not exactly 10x"
+
+    if score < MIN_SCORE:
+        return None, "score below minimum"
+
+    if volume_ratio < MIN_VOLUME_RATIO:
+        return None, "volume ratio below minimum"
 
     if direction == "LONG":
         if not stop < entry < targets[0] < targets[1] < targets[2]:
-            return None
+            return None, "invalid LONG price ordering"
     else:
         if not targets[2] < targets[1] < targets[0] < entry < stop:
-            return None
+            return None, "invalid SHORT price ordering"
 
     actual_stop_distance = abs(entry - stop) / entry * 100
 
-    # Reject risk metadata that materially disagrees with the prices.
-    if abs(actual_stop_distance - stop_distance_percent) > max(
-        0.15, actual_stop_distance * 0.10
-    ):
-        return None
+    if actual_stop_distance <= 0 or actual_stop_distance > MAX_STOP_DISTANCE_PERCENT:
+        return None, "stop distance outside allowed range"
 
-    expected_margin_loss = actual_stop_distance * leverage
-
-    if abs(
-        expected_margin_loss - estimated_margin_loss_percent
-    ) > max(0.25, expected_margin_loss * 0.15):
-        return None
+    expected_margin_loss = actual_stop_distance * FIXED_LEVERAGE
 
     signal_id = signal.get("signal_id")
-    symbol = signal.get("symbol")
     exchange_symbol = signal.get("exchange_symbol")
+    symbol = display_symbol(exchange_symbol, signal.get("symbol"))
 
-    if not signal_id or not symbol or not exchange_symbol:
-        return None
-
-    if str(signal.get("exchange", "")).lower() != "kraken":
-        return None
+    if not signal_id or not exchange_symbol or not symbol:
+        return None, "missing signal identifier or symbol"
 
     return {
         "signal_id": signal_id,
@@ -117,17 +142,14 @@ def normalize_signal(signal):
         "entry": entry,
         "stop_loss": stop,
         "targets": targets,
-        "leverage": leverage,
+        "leverage": FIXED_LEVERAGE,
         "stop_distance_percent": actual_stop_distance,
         "estimated_margin_loss_percent": expected_margin_loss,
-        "score": signal.get("score"),
+        "score": score,
         "rsi": signal.get("rsi"),
         "atr": signal.get("atr"),
-        "volume_ratio": signal.get("volume_ratio"),
-        "timeframe": signal.get(
-            "timeframe",
-            "5m entry / 15m trend",
-        ),
+        "volume_ratio": volume_ratio,
+        "timeframe": signal.get("timeframe", "5m entry / 15m trend"),
         "candle_time": signal.get("candle_time"),
         "evidence": signal.get("evidence", []),
         "created_at": signal.get("created_at", now_utc()),
@@ -142,12 +164,15 @@ def normalize_signal(signal):
         "realized_pnl_percent": 0.0,
         "messages_sent": [],
         "result": None,
-    }
+    }, None
 
 
 def main():
     print("Crypto Edge Futures Signal Registration")
     print("UTC:", now_utc())
+    print("Required leverage: 10x")
+    print("Minimum score:", MIN_SCORE)
+    print("Minimum volume ratio:", MIN_VOLUME_RATIO)
 
     signals_data = load_json(
         SIGNALS_FILE,
@@ -162,19 +187,17 @@ def main():
         signals = []
 
     journal = load_json(JOURNAL_FILE, {"trades": []})
-
     if not isinstance(journal, dict):
         journal = {"trades": []}
 
     trades = journal.get("trades", [])
-
     if not isinstance(trades, list):
         trades = []
 
     existing_ids = {
         trade.get("signal_id")
         for trade in trades
-        if isinstance(trade, dict)
+        if isinstance(trade, dict) and trade.get("signal_id")
     }
 
     added = 0
@@ -182,14 +205,12 @@ def main():
     duplicates = 0
 
     for signal in signals:
-        if not isinstance(signal, dict):
-            skipped += 1
-            continue
-
-        trade = normalize_signal(signal)
+        trade, reason = normalize_signal(signal)
 
         if trade is None:
             skipped += 1
+            signal_id = signal.get("signal_id", "unknown") if isinstance(signal, dict) else "unknown"
+            print(f"Skipped {signal_id}: {reason}")
             continue
 
         if trade["signal_id"] in existing_ids:
@@ -203,7 +224,8 @@ def main():
         print(
             f"Registered: {trade['symbol']} {trade['direction']} "
             f"leverage={trade['leverage']:.1f}x "
-            f"stop_distance={trade['stop_distance_percent']:.3f}%"
+            f"stop={trade['stop_distance_percent']:.3f}% "
+            f"margin-risk~{trade['estimated_margin_loss_percent']:.2f}%"
         )
 
     journal["trades"] = trades
@@ -211,7 +233,7 @@ def main():
     save_json(JOURNAL_FILE, journal)
 
     print("New Futures trades registered:", added)
-    print("Invalid or non-Futures signals skipped:", skipped)
+    print("Invalid or rejected signals:", skipped)
     print("Duplicate signals skipped:", duplicates)
     print("Total journal records:", len(trades))
 
