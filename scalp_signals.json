@@ -1,30 +1,31 @@
 {
   "sent": [
-    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
-    "kraken-linear-PF_BONKUSD-LONG-1792140000",
-    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
-    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
-    "kraken-linear-PF_RSRUSD-LONG-1792107000",
-    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
-    "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
-    "kraken-linear-PF_MOGUSD-LONG-1792140000",
-    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
-    "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792146000",
-    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-spot-SUI/USD-LONG-1792103400",
-    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
     "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792145400"
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
+    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_STRKUSD-SHORT-1792146000",
+    "kraken-linear-PF_DOGEUSD-LONG-1792149000",
+    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792126200",
+    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
+    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
+    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
+    "kraken-linear-PF_MOGUSD-LONG-1792140000",
+    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
+    "kraken-linear-PF_BONKUSD-LONG-1792140000",
+    "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-linear-PF_NEIROUSD-SHORT-1792115700"
   ],
   "signals": [
     {
@@ -842,7 +843,51 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T10:27:02.643211+00:00"
+    },
+    {
+      "signal_id": "kraken-linear-PF_DOGEUSD-LONG-1792149000",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_DOGEUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "DOGE/USD",
+      "direction": "LONG",
+      "entry": 0.08264,
+      "stop_loss": 0.08189284726990492,
+      "targets": [
+        0.08361129854912361,
+        0.08398487491417116,
+        0.08450788182523772
+      ],
+      "score": 8,
+      "rsi": 64.49,
+      "atr": 0.00018101820063387724,
+      "volume_ratio": 3.626,
+      "leverage": 10.0,
+      "stop_distance_percent": 0.9041,
+      "estimated_margin_loss_percent": 9.041,
+      "risk_reward": {
+        "tp1": 1.3,
+        "tp2": 1.8,
+        "tp3": 2.5
+      },
+      "support_reference": 0.08184,
+      "resistance_reference": 0.08248,
+      "timeframe": "5m entry / 15m trend",
+      "entry_timeframe": "5m",
+      "trend_timeframe": "15m",
+      "candle_time": 1792149000,
+      "evidence": [
+        "15m EMA 9 is above EMA 21",
+        "5m EMA 9 is above EMA 21",
+        "5m RSI bullish range: 64.5",
+        "Closed-candle volume is 3.63x the previous 20-candle average",
+        "5m candle closed above the prior 20-candle high",
+        "Latest closed 5m candle has bullish momentum"
+      ],
+      "created_at": "2026-10-16T11:15:01.247688+00:00"
     }
   ],
-  "updated_at": "2026-10-16T11:01:49.097112+00:00"
+  "updated_at": "2026-10-16T11:15:04.688347+00:00"
 }

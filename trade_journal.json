@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:01:49.574299+00:00",
+      "last_checked_at": "2026-10-16T11:15:05.129552+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -864,13 +864,15 @@
         "Latest closed 5m candle closed above the prior close"
       ],
       "created_at": "2026-10-16T05:56:36.476947+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T05:56:41.376960+00:00",
       "confirmed_entry_price": 5.146e-06,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T11:01:49.926199+00:00",
+      "closed_at": "2026-10-16T11:15:05.992180+00:00",
+      "last_checked_at": "2026-10-16T11:15:06.152955+00:00",
       "targets_hit": [
-        "TP1"
+        "TP1",
+        "TP2",
+        "TP3"
       ],
       "exits": [
         {
@@ -879,15 +881,35 @@
           "fraction": 0.4,
           "pnl_percent": 0.1936829785883927,
           "reason": "TP1"
+        },
+        {
+          "time": "2026-10-16T11:15:05.403023+00:00",
+          "candle_time": 1792149120,
+          "price": 5.163940466940686e-06,
+          "fraction": 0.3,
+          "pnl_percent": 0.3486293614591036,
+          "reason": "TP2"
+        },
+        {
+          "time": "2026-10-16T11:15:05.794281+00:00",
+          "candle_time": 1792149180,
+          "price": 5.171914007803213e-06,
+          "fraction": 0.3,
+          "pnl_percent": 0.5035757443298144,
+          "reason": "TP3"
         }
       ],
-      "remaining_fraction": 0.6,
-      "realized_pnl_percent": 0.07747319143535708,
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": 0.3331347231720325,
       "messages_sent": [
         "opened",
-        "TP1"
+        "TP1",
+        "TP2",
+        "TP3",
+        "closed"
       ],
-      "result": null
+      "result": "WIN",
+      "estimated_margin_return_percent": 3.331347231720325
     },
     {
       "signal_id": "kraken-linear-PF_PENGUUSD-LONG-1792131300",
@@ -1212,13 +1234,35 @@
       "entry_confirmed_at": "2026-10-16T09:16:01.661445+00:00",
       "confirmed_entry_price": 5.156e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:01:50.241115+00:00",
-      "targets_hit": [],
-      "exits": [],
-      "remaining_fraction": 1.0,
-      "realized_pnl_percent": 0.0,
+      "last_checked_at": "2026-10-16T11:15:09.752137+00:00",
+      "targets_hit": [
+        "TP1",
+        "TP2"
+      ],
+      "exits": [
+        {
+          "time": "2026-10-16T11:15:06.412484+00:00",
+          "candle_time": 1792149180,
+          "price": 5.166118072203512e-06,
+          "fraction": 0.4,
+          "pnl_percent": 0.19623879370659392,
+          "reason": "TP1"
+        },
+        {
+          "time": "2026-10-16T11:15:06.561712+00:00",
+          "candle_time": 1792149180,
+          "price": 5.174212529966322e-06,
+          "fraction": 0.3,
+          "pnl_percent": 0.35322982867186903,
+          "reason": "TP2"
+        }
+      ],
+      "remaining_fraction": 0.3,
+      "realized_pnl_percent": 0.18446446608419828,
       "messages_sent": [
-        "opened"
+        "opened",
+        "TP1",
+        "TP2"
       ],
       "result": null
     },
@@ -1303,11 +1347,11 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T10:16:02.411597+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T10:16:08.443906+00:00",
       "confirmed_entry_price": 0.07799,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T11:01:51.150691+00:00",
+      "closed_at": "2026-10-16T11:15:10.007875+00:00",
+      "last_checked_at": "2026-10-16T11:15:10.175281+00:00",
       "targets_hit": [
         "TP1",
         "TP2"
@@ -1327,16 +1371,26 @@
           "fraction": 0.3,
           "pnl_percent": 1.8297716629124419,
           "reason": "TP2"
+        },
+        {
+          "time": "2026-10-16T11:15:10.007858+00:00",
+          "candle_time": 1792149180,
+          "price": 0.07869188451411599,
+          "fraction": 0.3,
+          "pnl_percent": -1.0165398127291303,
+          "reason": "STOP LOSS (conservative candle rule)"
         }
       ],
-      "remaining_fraction": 0.3,
-      "realized_pnl_percent": 0.9555474239653846,
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": 0.6505854801466455,
       "messages_sent": [
         "opened",
         "TP1",
-        "TP2"
+        "TP2",
+        "closed"
       ],
-      "result": null
+      "result": "WIN",
+      "estimated_margin_return_percent": 6.505854801466455
     },
     {
       "signal_id": "kraken-linear-PF_STRKUSD-SHORT-1792146000",
@@ -1370,11 +1424,11 @@
         "Latest closed 5m candle closed below the prior close"
       ],
       "created_at": "2026-10-16T10:27:02.643211+00:00",
-      "status": "OPEN",
+      "status": "CLOSED",
       "entry_confirmed_at": "2026-10-16T10:30:01.146451+00:00",
       "confirmed_entry_price": 0.07734,
-      "closed_at": null,
-      "last_checked_at": "2026-10-16T11:01:51.707522+00:00",
+      "closed_at": "2026-10-16T11:15:10.430823+00:00",
+      "last_checked_at": "2026-10-16T11:15:10.611786+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -1386,16 +1440,75 @@
           "fraction": 0.4,
           "pnl_percent": 1.0294400146624958,
           "reason": "TP1"
+        },
+        {
+          "time": "2026-10-16T11:15:10.430810+00:00",
+          "candle_time": 1792149120,
+          "price": 0.0781866836273473,
+          "fraction": 0.6,
+          "pnl_percent": -1.0294400146624958,
+          "reason": "STOP LOSS (conservative candle rule)"
         }
       ],
-      "remaining_fraction": 0.6,
-      "realized_pnl_percent": 0.41177600586499835,
+      "remaining_fraction": 0.0,
+      "realized_pnl_percent": -0.20588800293249915,
       "messages_sent": [
         "opened",
-        "TP1"
+        "TP1",
+        "closed"
       ],
-      "result": null
+      "result": "LOSS",
+      "estimated_margin_return_percent": -0.20588800293249915
+    },
+    {
+      "signal_id": "kraken-linear-PF_DOGEUSD-LONG-1792149000",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_DOGEUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "DOGE/USD",
+      "direction": "LONG",
+      "entry": 0.08264,
+      "stop_loss": 0.08189284726990492,
+      "targets": [
+        0.08361129854912361,
+        0.08398487491417116,
+        0.08450788182523772
+      ],
+      "leverage": 10.0,
+      "stop_distance_percent": 0.9041054333193157,
+      "estimated_margin_loss_percent": 9.041054333193157,
+      "score": 8,
+      "rsi": 64.49,
+      "atr": 0.00018101820063387724,
+      "volume_ratio": 3.626,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792149000,
+      "evidence": [
+        "15m EMA 9 is above EMA 21",
+        "5m EMA 9 is above EMA 21",
+        "5m RSI bullish range: 64.5",
+        "Closed-candle volume is 3.63x the previous 20-candle average",
+        "5m candle closed above the prior 20-candle high",
+        "Latest closed 5m candle has bullish momentum"
+      ],
+      "created_at": "2026-10-16T11:15:01.247688+00:00",
+      "status": "OPEN",
+      "entry_confirmed_at": "2026-10-16T11:15:10.876852+00:00",
+      "confirmed_entry_price": 0.08264,
+      "closed_at": null,
+      "last_checked_at": "2026-10-16T11:15:11.035169+00:00",
+      "targets_hit": [],
+      "exits": [],
+      "remaining_fraction": 1.0,
+      "realized_pnl_percent": 0.0,
+      "messages_sent": [
+        "opened"
+      ],
+      "result": null,
+      "entry_confirmation_method": "closed_1m_candle_entry_zone_touch"
     }
   ],
-  "updated_at": "2026-10-16T11:01:51.857668+00:00"
+  "updated_at": "2026-10-16T11:15:11.185310+00:00"
 }
