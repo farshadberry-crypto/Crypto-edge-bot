@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T03:28:23.053203+00:00",
+      "last_checked_at": "2026-10-16T04:00:22.986005+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -336,7 +336,7 @@
       "entry_confirmed_at": "2026-10-16T02:30:44.159734+00:00",
       "confirmed_entry_price": 5.125e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T03:28:23.398414+00:00",
+      "last_checked_at": "2026-10-16T04:00:23.336137+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -379,7 +379,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T03:28:23.757073+00:00",
+      "last_checked_at": "2026-10-16T04:00:23.784909+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -490,7 +490,50 @@
         "closed"
       ],
       "result": "LOSS"
+    },
+    {
+      "signal_id": "kraken-linear-PF_STRKUSD-SHORT-1792122900",
+      "exchange": "kraken",
+      "exchange_symbol": "PF_STRKUSD",
+      "market_type": "futures",
+      "market": "FUTURES",
+      "category": "linear",
+      "symbol": "PF_STRKUSD",
+      "direction": "SHORT",
+      "entry": 0.08492,
+      "stop_loss": 0.08572222964442398,
+      "targets": [
+        0.08411777035557601,
+        0.08347598664003682,
+        0.08283420292449763
+      ],
+      "score": 5,
+      "rsi": 49.59,
+      "atr": 0.0005730211745885677,
+      "volume_ratio": 1.153,
+      "timeframe": "5m entry / 15m trend",
+      "candle_time": 1792122900,
+      "evidence": [
+        "15m EMA trend is bearish",
+        "5m RSI supports bearish momentum (49.6)",
+        "Volume is 1.15x its previous 20-candle average",
+        "Latest closed 5m candle closed below the prior close"
+      ],
+      "created_at": "2026-10-16T04:00:20.310798+00:00",
+      "status": "OPEN",
+      "entry_confirmed_at": "2026-10-16T04:00:24.138154+00:00",
+      "confirmed_entry_price": 0.08493,
+      "closed_at": null,
+      "last_checked_at": "2026-10-16T04:00:24.138130+00:00",
+      "targets_hit": [],
+      "exits": [],
+      "remaining_fraction": 1.0,
+      "realized_pnl_percent": 0.0,
+      "messages_sent": [
+        "opened"
+      ],
+      "result": null
     }
   ],
-  "updated_at": "2026-10-16T03:28:23.957266+00:00"
+  "updated_at": "2026-10-16T04:00:24.765049+00:00"
 }
