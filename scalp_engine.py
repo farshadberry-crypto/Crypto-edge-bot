@@ -1,96 +1,108 @@
-import os, json, time, requests
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.patches as patches
-from datetime import datetime, timezone
-
-# CRYPTO EDGE FUTURES SCALP ENGINE v4.1 DIAGNOSTIC
-# Kraken linear Futures | 5m entry | 15m trend | paper signals only
-FUTURES_API = "https://futures.kraken.com/derivatives/api/v3"
-FUTURES_CHARTS = "https://futures.kraken.com/api/charts/v1"
-STATE_FILE = "scalp_signals.json"
-CHART_DIR = "signal_charts"
-SCAN_LIMIT = 12
-MAX_SIGNALS_PER_RUN = 2
-FIXED_LEVERAGE = 10.0
-VOLUME_RATIO_MIN = 1.20
-MIN_SCORE = 6
-ATR_PERIOD = 14
-ATR_STOP_MULTIPLIER = 1.25
-MIN_STOP_DISTANCE_PERCENT = 0.15
-MAX_STOP_DISTANCE_PERCENT = 1.20
-MIN_TP1_RR = 1.30
-TP2_RR = 1.80
-TP3_RR = 2.50
-MAX_CANDLE_COUNT = 60
-MAX_STORED_SIGNALS = 1000
-SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CryptoEdge-FuturesScalpEngine/4.1", "Accept": "application/json"})
+    fig, (ax, volume_ax) = plt.subplots(2, 1, figsize=(15, 9), sharex=True,
+                                       gridspec_kw={"height_ratios": [4, 1]})
+    for i, c in enumerate(candles):
+        x = x_values[i]
+        color = "#00b894" if c["close"] >= c["open"] else "#e74c3c"
+        ax.vlines(x, c["low"], c["high"], color=color, linewidth=1.2, zorder=2)
+        body_height = abs(c["close"] - c["open"]) or max(abs(c["close"]) * 0.00002, 1e-12)
+        ax.add_patch(patches.Rectangle((x-candle_width/2, min(c["open"], c["close"])), candle_width,
+                                      body_height, facecolor=color, edgecolor=color, linewidth=0.8, zorder=3))
+        volume_ax.bar(x, c["volume"], width=candle_width, color=color, alpha=0.8)
+    ax.axhline(signal["entry"], color="#2980b9", linewidth=1.8, label=f"ENTRY {fmt(signal['entry'])}")
+    ax.axhline(signal["stop_loss"], color="#e74c3c", linestyle="--", linewidth=1.8,
+                label=f"STOP {fmt(signal['stop_loss'])}")
+    for i, target in enumerate(signal["targets"]):
+        ax.axhline(target, color=["#27ae60", "#16a085", "#2ecc71"][i], linestyle=":", linewidth=1.6,
+                   label=f"TP{i+1} {fmt(target)}")
+    ax.set_title(f"CRYPTO EDGE | {signal['symbol']} | {signal['direction']} | 10x | 5m ENTRY / 15m TREND",
+                 fontsize=15, fontweight="bold", pad=14)
+    ax.set_ylabel("Price"); volume_ax.set_ylabel("Volume"); volume_ax.set_xlabel("Time (UTC)")
+    ax.grid(True, alpha=0.22); volume_ax.grid(True, axis="y", alpha=0.18)
+    ax.legend(loc="upper left", fontsize=8, ncol=2, framealpha=0.9)
+    volume_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M", tz=timezone.utc))
+    fig.autofmt_xdate(); fig.tight_layout()
+    safe_symbol = signal["symbol"].replace("/", "_").replace(":", "_")
+    path = os.path.join(CHART_DIR, f"{safe_symbol}_{signal['candle_time']}.png")
+    fig.savefig(path, dpi=180, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return path
 
 
-def now_utc():
-    return datetime.now(timezone.utc).isoformat()
+def build_caption(signal):
+    t = signal["targets"]
+    evidence = "\n".join(f"• {item}" for item in signal["evidence"])
+    return ("🚨 CRYPTO EDGE | FUTURES SCALP\n\n"
+            f"🪙 Pair: {signal['symbol']}\n📈 Direction: {signal['direction']}\n"
+            "⏱ Entry: 5m candles | Trend: 15m candles\n\n"
+            f"🎯 Reference entry: {fmt(signal['entry'])}\n🛑 Stop loss: {fmt(signal['stop_loss'])}\n"
+            f"💰 TP1 (1.3R): {fmt(t[0])}\n💰 TP2 (1.8R): {fmt(t[1])}\n💰 TP3 (2.5R): {fmt(t[2])}\n\n"
+            f"⚙️ Fixed suggested leverage: {FIXED_LEVERAGE:.0f}x\n"
+            f"📏 Price distance to SL: {signal['stop_distance_percent']}%\n"
+            f"🧮 Approx. allocated-margin loss at SL: {signal['estimated_margin_loss_percent']}%\n"
+            "Excludes fees, slippage, funding and liquidation effects.\n\n"
+            f"📊 Signal score: {signal['score']}\n📉 5m RSI: {signal['rsi']}\n"
+            f"📦 Closed-candle volume ratio: {signal['volume_ratio']}x\n"
+            f"🧱 Support reference: {fmt(signal['support_reference'])}\n"
+            f"🧱 Resistance reference: {fmt(signal['resistance_reference'])}\n\n"
+            f"🔎 Evidence:\n{evidence}\n\n🟡 STATUS: WAITING FOR ENTRY\n"
+            "Entry is a reference price, not a confirmed fill.\nPaper tracking only. No real order has been placed.")
 
 
-def get_json(url, params=None):
-    response = SESSION.get(url, params=params, timeout=20)
-    response.raise_for_status()
-    payload = response.json()
-    if not isinstance(payload, dict):
-        raise RuntimeError("Unexpected API response format.")
-    return payload
-
-
-def load_state():
+def scan_market(instrument):
+    contract = instrument["contract"]
     try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, dict):
-            data.setdefault("sent", [])
-            data.setdefault("signals", [])
-            return data
-    except (OSError, json.JSONDecodeError):
-        pass
-    return {"sent": [], "signals": []}
+        candles_5m = fetch_futures_candles(contract, "5m")
+        time.sleep(0.25)
+        candles_15m = fetch_futures_candles(contract, "15m")
+        signal, reason = evaluate_signal(contract, candles_5m, candles_15m)
+        print(f"DIAGNOSTIC {instrument['symbol']} ({contract}): {reason}")
+        return signal
+    except Exception as exc:
+        print(f"DIAGNOSTIC {instrument['symbol']} ({contract}): DATA/API ERROR: {exc}")
+        return None
 
 
-def save_state(state):
-    temporary = STATE_FILE + ".tmp"
-    with open(temporary, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
-        f.flush()
-        os.fsync(f.fileno())
-    os.replace(temporary, STATE_FILE)
+def main():
+    print("Starting Crypto Edge Kraken Futures Scalp Engine v4.1 DIAGNOSTIC")
+    print("UTC:", now_utc())
+    print("Market mode: FUTURES ONLY")
+    print(f"Fixed suggested leverage: {FIXED_LEVERAGE:.0f}x")
+    print("Entry timeframe: 5m | Trend timeframe: 15m")
+    print("Chart: real OHLC candlesticks + volume")
+    print("Diagnostic mode: rejection reasons enabled; thresholds unchanged.")
+    state = load_state()
+    sent_ids = set(state.get("sent", []))
+    saved_signals = state.get("signals", [])
+    if not isinstance(saved_signals, list): saved_signals = []
+    universe = fetch_futures_universe()
+    print("Eligible Futures contracts:", len(universe))
+    attempted = sent_count = 0
+    for instrument in universe:
+        attempted += 1
+        signal = scan_market(instrument)
+        if signal is None:
+            time.sleep(0.25)
+            continue
+        if signal["signal_id"] in sent_ids:
+            print(f"Already sent; skipping duplicate: {signal['signal_id']}")
+            continue
+        chart_path = create_chart(signal)
+        if telegram_send_photo(chart_path, build_caption(signal)):
+            sent_ids.add(signal["signal_id"])
+            saved_signals.append({k: v for k, v in signal.items() if k != "candles"})
+            sent_count += 1
+            print(f"Signal sent: {signal['symbol']} {signal['direction']} score={signal['score']} "
+                  f"leverage={signal['leverage']}x SL distance={signal['stop_distance_percent']}%")
+        time.sleep(0.35)
+        if sent_count >= MAX_SIGNALS_PER_RUN: break
+    state["sent"] = list(sent_ids)[-5000:]
+    state["signals"] = saved_signals[-MAX_STORED_SIGNALS:]
+    state["updated_at"] = now_utc()
+    save_state(state)
+    print("Markets attempted:", attempted)
+    print("Signals sent:", sent_count)
+    print("Kraken Futures scan completed.")
 
 
-def display_symbol(contract):
-    value = str(contract or "").strip()
-    if value.startswith(("PF_", "PI_")):
-        value = value[3:]
-    for quote in ("USDT", "USDC", "USD", "EUR", "GBP", "BTC"):
-        if value.endswith(quote) and len(value) > len(quote):
-            base = value[:-len(quote)]
-            if base == "XBT":
-                base = "BTC"
-            return f"{base}/{quote}"
-    return value
-
-
-def telegram_send_photo(path, caption):
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
-    if not token:
-        print("TELEGRAM_BOT_TOKEN is missing.")
-        return False
-    try:
-        with open(path, "rb") as photo:
-            response = SESSION.post(
-                f"https://api.telegram.org/bot{token}/sendPhoto",
-                data={"chat_id": chat_id, "caption": caption[:1024]},
-                files={"photo": photo}, timeout=30)
-        response.raise_for_status()
-        payload = response.json()
-        if not payload.get("ok"):
-            print("Telegram photo rejected:", payload)
+if __name__ == "__main__":
+    main()
