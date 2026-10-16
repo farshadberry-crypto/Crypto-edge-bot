@@ -7,7 +7,7 @@ import requests
 from datetime import datetime, timezone
 
 # =========================================================
-# CRYPTO EDGE FUTURES TRADE MANAGER
+# CRYPTO EDGE FUTURES TRADE MANAGER v6.0
 # Kraken linear futures | Closed 1m candles
 # Paper tracking only. No real orders are placed.
 # =========================================================
@@ -21,12 +21,19 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
 FIXED_LEVERAGE = 10.0
 ENTRY_ZONE_PERCENT = 0.15
 TP_ALLOCATIONS = [0.40, 0.30, 0.30]
+
 CANDLE_SECONDS = 60
 MAX_CANDLES = 120
 
+MIN_SCORE = 6
+MIN_VOLUME_RATIO = 1.20
+MIN_STOP_DISTANCE_PERCENT = 0.15
+MAX_STOP_DISTANCE_PERCENT = 1.20
+MAX_WAITING_AGE_HOURS = 6
+
 SESSION = requests.Session()
 SESSION.headers.update({
-    "User-Agent": "CryptoEdge-Futures-TradeManager/5.0",
+    "User-Agent": "CryptoEdge-Futures-TradeManager/6.0",
     "Accept": "application/json",
 })
 
@@ -38,17 +45,28 @@ def now_utc():
 def finite_number(value):
     try:
         return math.isfinite(float(value))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return False
+
+
+def number(value, default=0.0):
+    try:
+        result = float(value)
+        return result if math.isfinite(result) else default
+    except (TypeError, ValueError, OverflowError):
+        return default
 
 
 def parse_time(value):
     if not value:
         return None
     try:
-        return datetime.fromisoformat(
+        parsed = datetime.fromisoformat(
             str(value).replace("Z", "+00:00")
-        ).timestamp()
+        )
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.timestamp()
     except (ValueError, TypeError, OverflowError):
         return None
 
@@ -116,19 +134,25 @@ def fmt(price):
 
 
 def get_leverage(trade):
-    value = trade.get("leverage", FIXED_LEVERAGE)
-    try:
-        value = float(value)
-    except (TypeError, ValueError):
-        return FIXED_LEVERAGE
-    return value if math.isfinite(value) and value > 0 else FIXED_LEVERAGE
+    value = trade.get("leverage")
+    if not finite_number(value):
+        return None
+    value = float(value)
+    return value if value > 0 else None
 
 
 def leverage_summary(trade):
-    entry = float(trade["entry"])
-    stop = float(trade["stop_loss"])
+    entry = number(trade.get("entry"))
+    stop = number(trade.get("stop_loss"))
     leverage = get_leverage(trade)
-    distance = abs(entry - stop) / entry * 100 if entry > 0 else 0
+
+    if entry <= 0 or stop <= 0 or leverage is None:
+        return (
+            "⚙️ Leverage: unknown in legacy record\n"
+            "⚠️ Margin risk cannot be calculated reliably."
+        )
+
+    distance = abs(entry - stop) / entry * 100
     margin_risk = distance * leverage
 
     return (
@@ -164,10 +188,9 @@ def send_telegram(message):
 
 
 def notify_once(trade, key, message):
-    if key in trade["messages_sent"]:
-        return
-    if send_telegram(message):
-        trade["messages_sent"].append(key)
+    if key not in trade["messages_sent"]:
+        if send_telegram(message):
+            trade["messages_sent"].append(key)
 
 
 def initialize_trade(trade):
@@ -201,6 +224,98 @@ def initialize_trade(trade):
         trade["realized_pnl_percent"] = 0.0
 
     return trade
+
+
+def validate_waiting_trade(trade):
+    """
+    Apply current entry rules only to waiting trades.
+    Existing OPEN trades are preserved and managed to completion.
+    """
+    symbol = display_symbol(trade)
+
+    if not is_futures_trade(trade):
+        return f"{symbol}: not a Kraken linear Futures trade"
+
+    contract = str(trade.get("exchange_symbol", "")).upper()
+    if not contract.startswith(("PF_", "PI_")):
+        return f"{symbol}: invalid Futures contract"
+
+    direction = str(trade.get("direction", "")).upper()
+    if direction not in ("LONG", "SHORT"):
+        return f"{symbol}: invalid direction"
+
+    entry = number(trade.get("entry"), -1)
+    stop = number(trade.get("stop_loss"), -1)
+    targets = trade.get("targets")
+
+    if entry <= 0 or stop <= 0:
+        return f"{symbol}: invalid entry or stop"
+
+    if not isinstance(targets, list) or len(targets) < 3:
+        return f"{symbol}: three targets are required"
+
+    if not all(finite_number(target) for target in targets[:3]):
+        return f"{symbol}: invalid target prices"
+
+    targets = [float(target) for target in targets[:3]]
+
+    if direction == "LONG":
+        if not (stop < entry < targets[0] < targets[1] < targets[2]):
+            return f"{symbol}: invalid LONG price ordering"
+    else:
+        if not (targets[2] < targets[1] < targets[0] < entry < stop):
+            return f"{symbol}: invalid SHORT price ordering"
+
+    score = number(trade.get("score"), -1)
+    if score < MIN_SCORE:
+        return f"{symbol}: legacy score {score:g} below {MIN_SCORE}"
+
+    volume_ratio = number(trade.get("volume_ratio"), -1)
+    if volume_ratio < MIN_VOLUME_RATIO:
+        return (
+            f"{symbol}: volume ratio {volume_ratio:g}x "
+            f"below {MIN_VOLUME_RATIO:.2f}x"
+        )
+
+    leverage = get_leverage(trade)
+    if leverage is None or abs(leverage - FIXED_LEVERAGE) > 0.0001:
+        return f"{symbol}: leverage is missing or not 10x"
+
+    stop_distance = abs(entry - stop) / entry * 100
+
+    if not (
+        MIN_STOP_DISTANCE_PERCENT
+        <= stop_distance
+        <= MAX_STOP_DISTANCE_PERCENT
+    ):
+        return (
+            f"{symbol}: stop distance {stop_distance:.3f}% "
+            "outside current limits"
+        )
+
+    return None
+
+
+def cancel_waiting_trade(trade, reason):
+    trade["status"] = "CANCELLED"
+    trade["cancelled_at"] = now_utc()
+    trade["cancel_reason"] = reason
+    trade["remaining_fraction"] = 0.0
+
+    print(
+        f"CANCELLED waiting trade: {display_symbol(trade)} "
+        f"{trade.get('direction')} | {reason}"
+    )
+
+
+def expire_waiting_trade(trade):
+    created = parse_time(trade.get("created_at"))
+
+    if created is None:
+        return False
+
+    age_seconds = time.time() - created
+    return age_seconds > MAX_WAITING_AGE_HOURS * 3600
 
 
 def fetch_closed_candles(trade):
@@ -255,7 +370,6 @@ def fetch_closed_candles(trade):
             if candle["high"] < candle["low"]:
                 continue
 
-            # Only fully closed candles are eligible.
             if stamp + CANDLE_SECONDS > now:
                 continue
 
@@ -275,19 +389,13 @@ def fetch_closed_candles(trade):
 def candles_to_process(trade, candles):
     previous_check = parse_time(trade.get("last_checked_at"))
 
-    # On first use, process only the newest closed candle.
-    # Do not invent the path price took before tracking began.
     if previous_check is None:
         return candles[-1:]
 
-    # Include candles that closed after the previous successful check.
-    # Candle timestamps represent their opening time.
-    pending = [
+    return [
         candle for candle in candles
         if previous_check < candle["time"] + CANDLE_SECONDS
     ]
-
-    return pending
 
 
 def entry_zone(trade):
@@ -329,29 +437,38 @@ def is_target_hit_in_candle(trade, candle, target):
 
 
 def finalize_trade(trade):
-    total = float(trade.get("realized_pnl_percent", 0.0))
+    total = number(trade.get("realized_pnl_percent"))
     leverage = get_leverage(trade)
 
     trade["remaining_fraction"] = 0.0
     trade["status"] = "CLOSED"
     trade["closed_at"] = now_utc()
-    trade["estimated_margin_return_percent"] = total * leverage
     trade["result"] = (
         "WIN" if total > 0
         else "LOSS" if total < 0
         else "BREAKEVEN"
     )
 
-    return total, leverage, total * leverage
+    if leverage is not None:
+        trade["estimated_margin_return_percent"] = total * leverage
+    else:
+        # Do not invent leverage for historical records.
+        trade.pop("estimated_margin_return_percent", None)
+
+    margin_return = (
+        total * leverage if leverage is not None else None
+    )
+
+    return total, leverage, margin_return
 
 
 def open_trade(trade, candle):
     trade["status"] = "OPEN"
     trade["entry_confirmed_at"] = now_utc()
-
-    # Assumed fill: planned entry, not a verified exchange execution.
     trade["confirmed_entry_price"] = float(trade["entry"])
-    trade["entry_confirmation_method"] = "closed_1m_candle_entry_zone_touch"
+    trade["entry_confirmation_method"] = (
+        "closed_1m_candle_entry_zone_touch"
+    )
 
     low, high = entry_zone(trade)
     symbol = display_symbol(trade)
@@ -362,22 +479,22 @@ def open_trade(trade, candle):
         f"📈 Direction: {trade['direction']}\n"
         f"🎯 Planned entry: {fmt(trade['entry'])}\n"
         f"📍 Entry zone: {fmt(low)} - {fmt(high)}\n"
-        f"🕯️ Entry zone touched on a closed 1m candle\n"
+        "🕯️ Entry zone touched on a closed 1m candle\n"
         f"🧮 Assumed paper fill: {fmt(trade['entry'])}\n"
         f"🛑 Stop loss: {fmt(trade['stop_loss'])}\n"
         f"💰 TP1: {fmt(trade['targets'][0])}\n"
         f"💰 TP2: {fmt(trade['targets'][1])}\n"
         f"💰 TP3: {fmt(trade['targets'][2])}\n\n"
         f"{leverage_summary(trade)}\n\n"
-        "The candle's intraminute price path is unknown. "
-        "This is an estimated paper fill, not a real execution."
+        "Estimated paper fill only, not a real execution. "
+        "The intraminute price path is unknown."
     )
 
     notify_once(trade, "opened", message)
 
 
 def close_remaining(trade, price, reason, candle_time=None):
-    remaining = max(0.0, float(trade["remaining_fraction"]))
+    remaining = max(0.0, number(trade.get("remaining_fraction")))
 
     if remaining > 0:
         move = pnl_percent(trade, price)
@@ -397,26 +514,33 @@ def close_remaining(trade, price, reason, candle_time=None):
     total, leverage, margin_return = finalize_trade(trade)
     symbol = display_symbol(trade)
 
+    margin_text = (
+        f"{margin_return:+.3f}%"
+        if margin_return is not None else "unknown"
+    )
+    leverage_text = (
+        f"{leverage:.1f}x" if leverage is not None else "unknown"
+    )
+
     message = (
         "🏁 CRYPTO EDGE | FUTURES TRADE CLOSED (PAPER)\n\n"
         f"🪙 Coin: {symbol}\n"
         f"📈 Direction: {trade['direction']}\n"
         f"📌 Reason: {reason}\n"
         f"💵 Assumed exit price: {fmt(price)}\n"
-        f"⚙️ Leverage: {leverage:.1f}x\n"
+        f"⚙️ Leverage: {leverage_text}\n"
         f"📊 Estimated underlying return: {total:+.3f}%\n"
-        f"💹 Estimated return on allocated margin: {margin_return:+.3f}%\n"
+        f"💹 Estimated margin return: {margin_text}\n"
         f"📋 Result: {trade['result']}\n\n"
-        "Paper estimate before fees, slippage, funding and liquidation "
-        "effects. Not an actual account return."
+        "Paper estimate before costs. No real order was placed."
     )
 
     notify_once(trade, "closed", message)
 
 
 def process_open_candle(trade, candle):
-    # Conservative rule: if the same 1m candle touched SL and any TP,
-    # assume SL happened first because OHLC cannot prove the sequence.
+    # Conservative OHLC assumption: stop takes priority if both
+    # stop and targets were touched during the same candle.
     if is_stop_hit_in_candle(trade, candle):
         close_remaining(
             trade,
@@ -431,9 +555,7 @@ def process_open_candle(trade, candle):
     leverage = get_leverage(trade)
     symbol = display_symbol(trade)
 
-    # If several targets are reached within one candle and SL is not
-    # reached, process targets from nearest to farthest.
-    for index, raw_target in enumerate(targets):
+    for index, raw_target in enumerate(targets[:3]):
         key = f"TP{index + 1}"
 
         if key in already_hit:
@@ -444,7 +566,7 @@ def process_open_candle(trade, candle):
         if not is_target_hit_in_candle(trade, candle, target):
             continue
 
-        remaining = max(0.0, float(trade["remaining_fraction"]))
+        remaining = max(0.0, number(trade["remaining_fraction"]))
         allocation = min(TP_ALLOCATIONS[index], remaining)
 
         if allocation <= 0:
@@ -464,23 +586,32 @@ def process_open_candle(trade, candle):
             "reason": key,
         })
 
-        accumulated = float(trade["realized_pnl_percent"])
-        margin_return = accumulated * leverage
+        accumulated = number(trade["realized_pnl_percent"])
+        margin_return = (
+            accumulated * leverage if leverage is not None else None
+        )
+
+        leverage_text = (
+            f"{leverage:.1f}x" if leverage is not None else "unknown"
+        )
+        margin_text = (
+            f"{margin_return:+.3f}%"
+            if margin_return is not None else "unknown"
+        )
 
         message = (
             f"💰 CRYPTO EDGE | FUTURES {key} HIT (PAPER)\n\n"
             f"🪙 Coin: {symbol}\n"
             f"📈 Direction: {trade['direction']}\n"
             f"🎯 Target price: {fmt(target)}\n"
-            f"⚙️ Leverage: {leverage:.1f}x\n"
+            f"⚙️ Leverage: {leverage_text}\n"
             f"📤 Paper exit: {allocation * 100:.0f}% of original position\n"
             f"📦 Remaining position: "
             f"{trade['remaining_fraction'] * 100:.0f}%\n"
             f"📊 Underlying move at target: {move:+.3f}%\n"
             f"📈 Accumulated weighted underlying return: {accumulated:+.3f}%\n"
-            f"💹 Estimated margin return: {margin_return:+.3f}%\n\n"
-            "Estimated paper tracking only. Fees, slippage and funding "
-            "are excluded."
+            f"💹 Estimated margin return: {margin_text}\n\n"
+            "Paper tracking only. Trading costs are excluded."
         )
 
         notify_once(trade, key, message)
@@ -489,16 +620,23 @@ def process_open_candle(trade, candle):
     if trade["remaining_fraction"] <= 0.000001:
         total, leverage, margin_return = finalize_trade(trade)
 
+        leverage_text = (
+            f"{leverage:.1f}x" if leverage is not None else "unknown"
+        )
+        margin_text = (
+            f"{margin_return:+.3f}%"
+            if margin_return is not None else "unknown"
+        )
+
         message = (
             "🏁 CRYPTO EDGE | ALL FUTURES TARGETS COMPLETED (PAPER)\n\n"
             f"🪙 Coin: {symbol}\n"
             f"📈 Direction: {trade['direction']}\n"
-            f"⚙️ Leverage: {leverage:.1f}x\n"
+            f"⚙️ Leverage: {leverage_text}\n"
             f"📊 Estimated underlying return: {total:+.3f}%\n"
-            f"💹 Estimated return on allocated margin: {margin_return:+.3f}%\n"
+            f"💹 Estimated return on allocated margin: {margin_text}\n"
             f"📋 Result: {trade['result']}\n\n"
-            "Paper estimate before fees, slippage and funding. "
-            "No real order was placed."
+            "Paper estimate before trading costs. No real order was placed."
         )
 
         notify_once(trade, "closed", message)
@@ -513,11 +651,7 @@ def calculate_stats(trades):
     ]
 
     def realized(trade):
-        try:
-            value = float(trade.get("realized_pnl_percent", 0))
-            return value if math.isfinite(value) else 0.0
-        except (TypeError, ValueError):
-            return 0.0
+        return number(trade.get("realized_pnl_percent"))
 
     wins = sum(1 for trade in closed if realized(trade) > 0)
     losses = sum(1 for trade in closed if realized(trade) < 0)
@@ -527,18 +661,18 @@ def calculate_stats(trades):
     gross_loss = abs(sum(min(0.0, realized(t)) for t in closed))
     profit_factor = gross_profit / gross_loss if gross_loss > 0 else None
 
-    margin_returns = []
+    known_margin_returns = []
+    unknown_leverage_count = 0
+
     for trade in closed:
-        try:
-            stored = trade.get("estimated_margin_return_percent")
-            value = (
-                float(stored) if stored is not None
-                else realized(trade) * get_leverage(trade)
-            )
-            if math.isfinite(value):
-                margin_returns.append(value)
-        except (TypeError, ValueError):
+        leverage = get_leverage(trade)
+        if leverage is None:
+            unknown_leverage_count += 1
             continue
+
+        # Recalculate consistently from realized underlying return and
+        # the recorded leverage. This is still an estimate, not account PnL.
+        known_margin_returns.append(realized(trade) * leverage)
 
     return {
         "closed_futures": total,
@@ -548,16 +682,23 @@ def calculate_stats(trades):
         "total_underlying_return_percent": round(
             sum(realized(t) for t in closed), 3
         ),
-        "estimated_total_margin_return_percent": round(
-            sum(margin_returns), 3
+        "estimated_margin_return_known_leverage_only_percent": round(
+            sum(known_margin_returns), 3
         ),
-        "profit_factor": round(profit_factor, 3) if profit_factor is not None else None,
+        "closed_trades_with_unknown_leverage": unknown_leverage_count,
+        "profit_factor_underlying_returns": (
+            round(profit_factor, 3)
+            if profit_factor is not None else None
+        ),
     }
 
 
 def main():
-    print("Crypto Edge Futures Trade Manager v5.0:", now_utc())
+    print("Crypto Edge Futures Trade Manager v6.0:", now_utc())
     print("Closed 1m candles | Paper tracking only")
+    print(f"New waiting-trade rules: score >= {MIN_SCORE}, "
+          f"volume >= {MIN_VOLUME_RATIO:.2f}x, leverage = 10x")
+    print(f"Waiting-entry expiry: {MAX_WAITING_AGE_HOURS} hours")
 
     journal = load_journal()
     trades = journal["trades"]
@@ -566,11 +707,28 @@ def main():
         trade for trade in trades
         if isinstance(trade, dict)
         and is_futures_trade(trade)
-        and trade.get("status", "WAITING_ENTRY") in ("WAITING_ENTRY", "OPEN")
+        and trade.get("status", "WAITING_ENTRY")
+        in ("WAITING_ENTRY", "OPEN")
     ]
 
     for trade in active_trades:
         initialize_trade(trade)
+
+        # Only waiting trades are subject to the new-signal filters.
+        # Existing OPEN trades are preserved to completion.
+        if trade["status"] == "WAITING_ENTRY":
+            invalid_reason = validate_waiting_trade(trade)
+
+            if invalid_reason:
+                cancel_waiting_trade(trade, invalid_reason)
+                continue
+
+            if expire_waiting_trade(trade):
+                cancel_waiting_trade(
+                    trade,
+                    f"Entry not reached within {MAX_WAITING_AGE_HOURS} hours",
+                )
+                continue
 
         try:
             candles = fetch_closed_candles(trade)
@@ -591,8 +749,7 @@ def main():
                 if trade["status"] == "WAITING_ENTRY":
                     if candle_touches_entry(trade, candle):
                         open_trade(trade, candle)
-                        # Do not process exits in the entry candle:
-                        # the order of entry, stop and target touches is unknown.
+                        # Do not process exits on the entry candle.
                         continue
 
                     low, high = entry_zone(trade)
@@ -614,8 +771,8 @@ def main():
                 f"Manager error for {display_symbol(trade)} "
                 f"({trade.get('signal_id', 'unknown')}): {exc}"
             )
-            # Do not advance last_checked_at on API or processing errors.
-            # The next run can retry the unprocessed candles.
+            # Keep the previous checkpoint after errors so the next run
+            # can retry candles not successfully processed.
 
         time.sleep(0.15)
 
