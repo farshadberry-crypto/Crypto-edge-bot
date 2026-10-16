@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 SIGNALS_FILE = "scalp_signals.json"
 JOURNAL_FILE = "trade_journal.json"
 
+MAX_LEVERAGE = 5.0
+
 
 def now_utc():
     return datetime.now(timezone.utc).isoformat()
@@ -21,34 +23,51 @@ def load_json(path, default):
 
 def save_json(path, data):
     temporary = path + ".tmp"
+
     with open(temporary, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
         file.flush()
         os.fsync(file.fileno())
+
     os.replace(temporary, path)
 
 
 def normalize_signal(signal):
     category = signal.get("category")
     direction = signal.get("direction")
+    market_type = signal.get("market_type")
 
-    if category not in ("spot", "linear"):
+    # New engine is futures-only.
+    if category != "linear" or market_type != "futures":
         return None
 
     if direction not in ("LONG", "SHORT"):
-        return None
-
-    if category == "spot" and direction != "LONG":
         return None
 
     try:
         entry = float(signal["entry"])
         stop = float(signal["stop_loss"])
         targets = [float(value) for value in signal["targets"]]
+        leverage = float(signal["leverage"])
+        stop_distance_percent = float(
+            signal["stop_distance_percent"]
+        )
+        estimated_margin_loss_percent = float(
+            signal["estimated_margin_loss_percent"]
+        )
     except (KeyError, TypeError, ValueError):
         return None
 
     if entry <= 0 or stop <= 0 or len(targets) != 3:
+        return None
+
+    if not MIN_LEVERAGE <= leverage <= MAX_LEVERAGE:
+        return None
+
+    if stop_distance_percent <= 0:
+        return None
+
+    if estimated_margin_loss_percent <= 0:
         return None
 
     if direction == "LONG":
@@ -60,36 +79,40 @@ def normalize_signal(signal):
 
     signal_id = signal.get("signal_id")
     symbol = signal.get("symbol")
+    exchange_symbol = signal.get("exchange_symbol")
 
-    if not signal_id or not symbol:
+    # Never guess the exchange contract identifier.
+    if not signal_id or not symbol or not exchange_symbol:
         return None
 
-    # Preserve exchange identifiers supplied by the signal engine.
-    # Do not guess contract symbols from display symbols.
-    exchange = signal.get("exchange", "kraken")
-    exchange_symbol = signal.get("exchange_symbol", symbol)
-    market_type = signal.get(
-        "market_type",
-        "spot" if category == "spot" else "futures",
-    )
+    if signal.get("exchange") != "kraken":
+        return None
 
     return {
         "signal_id": signal_id,
-        "exchange": exchange,
+        "exchange": "kraken",
         "exchange_symbol": exchange_symbol,
-        "market_type": market_type,
-        "market": "SPOT" if category == "spot" else "FUTURES",
-        "category": category,
+        "market_type": "futures",
+        "market": "FUTURES",
+        "category": "linear",
         "symbol": symbol,
         "direction": direction,
         "entry": entry,
         "stop_loss": stop,
         "targets": targets,
+        "leverage": leverage,
+        "stop_distance_percent": stop_distance_percent,
+        "estimated_margin_loss_percent": (
+            estimated_margin_loss_percent
+        ),
         "score": signal.get("score"),
         "rsi": signal.get("rsi"),
         "atr": signal.get("atr"),
         "volume_ratio": signal.get("volume_ratio"),
-        "timeframe": signal.get("timeframe", "5m entry / 15m trend"),
+        "timeframe": signal.get(
+            "timeframe",
+            "5m entry / 15m trend",
+        ),
         "candle_time": signal.get("candle_time"),
         "evidence": signal.get("evidence", []),
         "created_at": signal.get("created_at", now_utc()),
@@ -108,7 +131,7 @@ def normalize_signal(signal):
 
 
 def main():
-    print("Crypto Edge Signal Registration")
+    print("Crypto Edge Futures Signal Registration")
     print("UTC:", now_utc())
 
     signals_data = load_json(
@@ -150,7 +173,8 @@ def main():
         trade = normalize_signal(signal)
 
         if trade is None:
-            print("Skipped invalid signal.")
+            # Old Spot signals and old signals without leverage fields
+            # are ignored rather than registered as new trades.
             skipped += 1
             continue
 
@@ -161,12 +185,17 @@ def main():
         existing_ids.add(trade["signal_id"])
         added += 1
 
+        print(
+            f"Registered: {trade['symbol']} {trade['direction']} "
+            f"leverage={trade['leverage']}x"
+        )
+
     journal["trades"] = trades
     journal["updated_at"] = now_utc()
     save_json(JOURNAL_FILE, journal)
 
-    print("New trades registered:", added)
-    print("Invalid signals skipped:", skipped)
+    print("New Futures trades registered:", added)
+    print("Invalid or non-Futures signals skipped:", skipped)
     print("Total journal records:", len(trades))
 
 
