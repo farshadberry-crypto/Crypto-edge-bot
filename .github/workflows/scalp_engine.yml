@@ -1,5 +1,5 @@
 
-name: Crypto Edge Scalp Engine
+name: Crypto Edge Futures Scalp Engine
 
 on:
   workflow_dispatch:
@@ -30,37 +30,69 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests matplotlib
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests matplotlib
 
       - name: Initialize state files
         run: |
-          python -c "import json, os; p='scalp_signals.json'; d={'sent': [], 'signals': []}; json.dump(d, open(p, 'w')) if not os.path.exists(p) else None"
-          python -c "import json, os; p='trade_journal.json'; d={'trades': []}; json.dump(d, open(p, 'w')) if not os.path.exists(p) else None"
+          python -c "import json, os; p='scalp_signals.json'; json.dump({'sent': [], 'signals': []}, open(p, 'w')) if not os.path.exists(p) else None"
+          python -c "import json, os; p='trade_journal.json'; json.dump({'trades': []}, open(p, 'w')) if not os.path.exists(p) else None"
 
-      - name: Run Scalp Engine
+      - name: Run Futures Scalp Engine
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
-        run: python scalp_engine.py
+        run: python -u scalp_engine.py
 
-      - name: Register new signals
-        run: python register_signals.py
-
-      - name: Update trade status
+      - name: Register new Futures signals
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
-        run: python trade_manager.py
+        run: python -u register_signals.py
+
+      - name: Update Futures trade status
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: "@cryptoedgeAlerts"
+        run: python -u trade_manager.py
+
+      - name: Validate persistent state files
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          for path in ("scalp_signals.json", "trade_journal.json"):
+              if not os.path.exists(path):
+                  print(f"State file missing: {path}")
+                  continue
+
+              try:
+                  with open(path, "r", encoding="utf-8") as file:
+                      data = json.load(file)
+                  print(f"{path}: valid JSON ({type(data).__name__})")
+              except Exception as exc:
+                  print(f"{path}: INVALID JSON: {exc}")
+                  raise
+          PY
 
       - name: Save persistent state to GitHub
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add -f scalp_signals.json trade_journal.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Update Crypto Edge trading state"
-            git push
-          else
+
+          if git diff --cached --quiet; then
             echo "No state changes to save."
+            exit 0
           fi
+
+          git commit -m "Update Crypto Edge Futures trading state"
+
+          git push origin HEAD:${GITHUB_REF_NAME}
