@@ -1511,7 +1511,7 @@
       "entry_confirmed_at": "2026-10-16T11:15:10.876852+00:00",
       "confirmed_entry_price": 0.08264,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T11:52:02.368941+00:00",
+      "last_checked_at": "2026-10-16T12:11:38.322130+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1523,5 +1523,5 @@
       "entry_confirmation_method": "closed_1m_candle_entry_zone_touch"
     }
   ],
-  "updated_at": "2026-10-16T11:52:02.519082+00:00"
+  "updated_at": "2026-10-16T12:11:38.472271+00:00"
 }
