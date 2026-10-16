@@ -2,18 +2,21 @@
 import os
 import json
 import time
+import math
 import requests
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.patches as patches
 
 from datetime import datetime, timezone
 
+
 # =========================================================
 # CRYPTO EDGE FUTURES SCALP ENGINE
-# Kraken Futures only
-# 5m entries / 15m trend
-# Paper signals only. No real orders are placed.
+# Kraken Futures | 5m entry | 15m trend
+# Real OHLC candlestick charts | Paper signals only
 # =========================================================
 
 FUTURES_API = "https://futures.kraken.com/derivatives/api/v3"
@@ -25,21 +28,27 @@ CHART_DIR = "signal_charts"
 SCAN_LIMIT = 12
 MAX_SIGNALS_PER_RUN = 2
 
-VOLUME_RATIO_MIN = 1.15
-MIN_SCORE = 5
-STOP_ATR_MULTIPLIER = 1.4
+FIXED_LEVERAGE = 10.0
 
-# Leverage is a suggestion, not an order.
-MAX_LEVERAGE = 5.0
-MIN_LEVERAGE = 1.0
+VOLUME_RATIO_MIN = 1.20
+MIN_SCORE = 6
 
-# Target: approximately 1% of allocated margin at stop,
-# before fees, slippage, funding, and liquidation effects.
-TARGET_MARGIN_RISK_PERCENT = 1.0
+ATR_PERIOD = 14
+ATR_STOP_MULTIPLIER = 1.25
+
+MIN_STOP_DISTANCE_PERCENT = 0.15
+MAX_STOP_DISTANCE_PERCENT = 1.20
+
+MIN_TP1_RR = 1.30
+TP2_RR = 1.80
+TP3_RR = 2.50
+
+MAX_CANDLE_COUNT = 60
+MAX_STORED_SIGNALS = 1000
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    "User-Agent": "CryptoEdge-FuturesScalpEngine/3.0",
+    "User-Agent": "CryptoEdge-FuturesScalpEngine/4.0",
     "Accept": "application/json",
 })
 
@@ -85,6 +94,28 @@ def save_state(state):
     os.replace(temporary, STATE_FILE)
 
 
+def display_symbol(contract):
+    """
+    Display a readable pair without changing the Kraken contract ID.
+    Example: PF_STRKUSD -> STRK/USD
+    """
+    value = str(contract or "").strip()
+
+    if value.startswith(("PF_", "PI_")):
+        value = value[3:]
+
+    for quote in ("USDT", "USDC", "USD", "EUR", "GBP", "BTC"):
+        if value.endswith(quote) and len(value) > len(quote):
+            base = value[:-len(quote)]
+
+            if base == "XBT":
+                base = "BTC"
+
+            return f"{base}/{quote}"
+
+    return value
+
+
 def telegram_send_photo(path, caption):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "@cryptoedgeAlerts")
@@ -120,26 +151,32 @@ def telegram_send_photo(path, caption):
 
 
 def fmt(price):
+    price = float(price)
+
     if price >= 1000:
         return f"{price:,.2f}"
     if price >= 1:
         return f"{price:.4f}"
-    return f"{price:.7f}"
+    if price >= 0.01:
+        return f"{price:.6f}"
+
+    return f"{price:.9f}".rstrip("0").rstrip(".")
 
 
 def fetch_futures_universe():
     payload = get_json(f"{FUTURES_API}/tickers")
 
     if payload.get("result") != "success":
-        raise RuntimeError("Kraken Futures ticker error: " + str(payload))
+        raise RuntimeError(
+            "Kraken Futures ticker error: " + str(payload)
+        )
 
     ranked = []
 
     for ticker in payload.get("tickers", []):
-        symbol = ticker.get("symbol", "")
+        contract = ticker.get("symbol", "")
 
-        # Kraken perpetual and dated futures contracts.
-        if not symbol.startswith(("PF_", "PI_")):
+        if not contract.startswith(("PF_", "PI_")):
             continue
 
         try:
@@ -167,29 +204,29 @@ def fetch_futures_universe():
             continue
 
         ranked.append({
-            "symbol": symbol,
-            "exchange_symbol": symbol,
+            "contract": contract,
+            "symbol": display_symbol(contract),
             "last_price": price,
             "reported_volume": volume,
         })
 
-    # Kraken volume fields can differ by contract.
-    # This is only a ranking heuristic, not USD turnover.
     ranked.sort(
         key=lambda item: item["reported_volume"],
         reverse=True,
     )
 
     if not ranked:
-        raise RuntimeError("No eligible Kraken Futures contracts returned.")
+        raise RuntimeError(
+            "No eligible Kraken Futures contracts returned."
+        )
 
     return ranked[:SCAN_LIMIT]
 
 
-def fetch_futures_candles(symbol, resolution):
+def fetch_futures_candles(contract, resolution):
     payload = get_json(
-        f"{FUTURES_CHARTS}/trade/{symbol}/{resolution}",
-        {"count": 100},
+        f"{FUTURES_CHARTS}/trade/{contract}/{resolution}",
+        {"count": 120},
     )
 
     raw = payload.get("candles", [])
@@ -199,40 +236,62 @@ def fetch_futures_candles(symbol, resolution):
         try:
             candle_time = int(row["time"])
 
-            # Kraken chart timestamps are normally milliseconds.
             if candle_time > 10_000_000_000:
                 candle_time //= 1000
 
-            candles.append({
+            candle = {
                 "time": candle_time,
                 "open": float(row["open"]),
                 "high": float(row["high"]),
                 "low": float(row["low"]),
                 "close": float(row["close"]),
-                "volume": float(row.get("volume", 0)),
-            })
+                "volume": float(row.get("volume", 0) or 0),
+            }
+
+            if (
+                candle["open"] <= 0
+                or candle["close"] <= 0
+                or candle["low"] <= 0
+                or candle["high"] <= 0
+                or candle["high"] < candle["low"]
+            ):
+                continue
+
+            candles.append(candle)
+
         except (KeyError, TypeError, ValueError):
             continue
 
     candles.sort(key=lambda candle: candle["time"])
 
-    if len(candles) < 30:
-        raise RuntimeError(f"Not enough Futures candles for {symbol}")
-
-    now = int(time.time())
     interval_seconds = {
         "5m": 300,
         "15m": 900,
     }.get(resolution, 300)
 
-    # Only closed candles may generate signals.
+    now = int(time.time())
+
+    # Do not evaluate candles that have not fully closed.
     candles = [
         candle for candle in candles
         if candle["time"] + interval_seconds <= now
     ]
 
-    if len(candles) < 30:
-        raise RuntimeError(f"Not enough closed Futures candles for {symbol}")
+    # Remove duplicate timestamps.
+    unique = {}
+
+    for candle in candles:
+        unique[candle["time"]] = candle
+
+    candles = sorted(
+        unique.values(),
+        key=lambda candle: candle["time"],
+    )
+
+    if len(candles) < 35:
+        raise RuntimeError(
+            f"Not enough closed {resolution} candles for {contract}"
+        )
 
     return candles
 
@@ -254,21 +313,22 @@ def calculate_rsi(closes, period=14):
     if len(closes) <= period:
         return None
 
-    gains = []
-    losses = []
+    changes = [
+        closes[i] - closes[i - 1]
+        for i in range(1, len(closes))
+    ]
 
-    for index in range(1, len(closes)):
-        change = closes[index] - closes[index - 1]
-        gains.append(max(change, 0))
-        losses.append(max(-change, 0))
+    gains = [max(change, 0) for change in changes]
+    losses = [max(-change, 0) for change in changes]
 
     avg_gain = sum(gains[:period]) / period
     avg_loss = sum(losses[:period]) / period
 
-    for index in range(period, len(gains)):
+    for index in range(period, len(changes)):
         avg_gain = (
             avg_gain * (period - 1) + gains[index]
         ) / period
+
         avg_loss = (
             avg_loss * (period - 1) + losses[index]
         ) / period
@@ -276,11 +336,12 @@ def calculate_rsi(closes, period=14):
     if avg_loss == 0:
         return 100.0
 
-    rs = avg_gain / avg_loss
-    return 100 - (100 / (1 + rs))
+    relative_strength = avg_gain / avg_loss
+
+    return 100 - (100 / (1 + relative_strength))
 
 
-def calculate_atr(candles, period=14):
+def calculate_atr(candles, period=ATR_PERIOD):
     if len(candles) <= period:
         return None
 
@@ -299,14 +360,14 @@ def calculate_atr(candles, period=14):
     if len(true_ranges) < period:
         return None
 
-    atr_value = sum(true_ranges[:period]) / period
+    value = sum(true_ranges[:period]) / period
 
     for current in true_ranges[period:]:
-        atr_value = (
-            atr_value * (period - 1) + current
+        value = (
+            value * (period - 1) + current
         ) / period
 
-    return atr_value
+    return value
 
 
 def calculate_leverage(entry, stop):
@@ -318,65 +379,128 @@ def calculate_leverage(entry, stop):
     if stop_distance_percent <= 0:
         return None, None, None
 
-    # If the stop is 0.25% away, 1% / 0.25% = 4x.
-    # A 5x hard cap avoids recommending higher leverage.
-    raw_leverage = TARGET_MARGIN_RISK_PERCENT / stop_distance_percent
+    # Fixed leverage for every newly generated signal.
+    leverage = FIXED_LEVERAGE
 
-    leverage = max(
-        MIN_LEVERAGE,
-        min(MAX_LEVERAGE, raw_leverage),
-    )
-
-    estimated_margin_loss_percent = (
-        stop_distance_percent * leverage
-    )
+    # Approximate loss relative to allocated margin.
+    # Fees, funding, slippage and liquidation are excluded.
+    margin_loss_percent = stop_distance_percent * leverage
 
     return (
-        round(leverage, 2),
-        round(stop_distance_percent, 3),
-        round(estimated_margin_loss_percent, 3),
+        leverage,
+        round(stop_distance_percent, 4),
+        round(margin_loss_percent, 3),
     )
 
 
-def evaluate_signal(symbol, exchange_symbol, candles_5m, candles_15m):
+def calculate_structure(candles, direction, atr, entry):
+    """
+    Put the stop beyond a recent local structure with an ATR buffer.
+    Reject stops that are too tight or too wide for this engine.
+    """
+    lookback = candles[-12:-1]
+
+    if len(lookback) < 8:
+        return None
+
+    if direction == "LONG":
+        swing_low = min(candle["low"] for candle in lookback)
+        stop = min(
+            swing_low - atr * 0.15,
+            entry - atr * ATR_STOP_MULTIPLIER,
+        )
+
+        if stop <= 0 or stop >= entry:
+            return None
+
+        risk = entry - stop
+
+    else:
+        swing_high = max(candle["high"] for candle in lookback)
+        stop = max(
+            swing_high + atr * 0.15,
+            entry + atr * ATR_STOP_MULTIPLIER,
+        )
+
+        if stop <= entry:
+            return None
+
+        risk = stop - entry
+
+    distance_percent = risk / entry * 100
+
+    if not (
+        MIN_STOP_DISTANCE_PERCENT
+        <= distance_percent
+        <= MAX_STOP_DISTANCE_PERCENT
+    ):
+        return None
+
+    return stop, risk, distance_percent
+
+
+def evaluate_signal(contract, candles_5m, candles_15m):
     closes = [candle["close"] for candle in candles_5m]
     volumes = [candle["volume"] for candle in candles_5m]
     closes_15m = [candle["close"] for candle in candles_15m]
 
-    if len(closes) < 30 or len(closes_15m) < 30:
+    if len(closes) < 35 or len(closes_15m) < 35:
         return None
 
-    price = closes[-1]
-    previous_price = closes[-2]
+    last = candles_5m[-1]
+    previous = candles_5m[-2]
+    entry = last["close"]
 
-    ema_fast = ema(closes_15m, 9)
-    ema_slow = ema(closes_15m, 21)
-    rsi = calculate_rsi(closes, 14)
-    atr = calculate_atr(candles_5m, 14)
+    ema_fast_15m = ema(closes_15m, 9)
+    ema_slow_15m = ema(closes_15m, 21)
+    ema_fast_5m = ema(closes, 9)
+    ema_slow_5m = ema(closes, 21)
+    rsi = calculate_rsi(closes)
+    atr = calculate_atr(candles_5m)
 
-    if any(value is None for value in (ema_fast, ema_slow, rsi, atr)):
+    if any(value is None for value in (
+        ema_fast_15m,
+        ema_slow_15m,
+        ema_fast_5m,
+        ema_slow_5m,
+        rsi,
+        atr,
+    )):
         return None
 
-    average_volume = sum(volumes[-21:-1]) / 20
+    if entry <= 0 or atr <= 0:
+        return None
 
-    if average_volume <= 0 or atr <= 0 or price <= 0:
+    previous_volumes = volumes[-21:-1]
+    average_volume = sum(previous_volumes) / len(previous_volumes)
+
+    if average_volume <= 0:
         return None
 
     volume_ratio = volumes[-1] / average_volume
 
-    recent_high = max(
-        candle["high"] for candle in candles_5m[-21:-1]
-    )
-    recent_low = min(
-        candle["low"] for candle in candles_5m[-21:-1]
-    )
+    # Recent structure excludes the current candle.
+    structure = candles_5m[-21:-1]
+    recent_high = max(candle["high"] for candle in structure)
+    recent_low = min(candle["low"] for candle in structure)
 
-    bullish_trend = ema_fast > ema_slow
-    bearish_trend = ema_fast < ema_slow
-    breakout_up = price > recent_high
-    breakout_down = price < recent_low
-    momentum_up = price > previous_price
-    momentum_down = price < previous_price
+    bullish_trend = ema_fast_15m > ema_slow_15m
+    bearish_trend = ema_fast_15m < ema_slow_15m
+
+    bullish_5m = ema_fast_5m > ema_slow_5m
+    bearish_5m = ema_fast_5m < ema_slow_5m
+
+    breakout_up = last["close"] > recent_high
+    breakout_down = last["close"] < recent_low
+
+    momentum_up = last["close"] > previous["close"]
+    momentum_down = last["close"] < previous["close"]
+
+    # Reject weak volume instead of awarding a score to it.
+    if volume_ratio < VOLUME_RATIO_MIN:
+        return None
+
+    candidates = []
 
     long_score = 0
     short_score = 0
@@ -385,64 +509,75 @@ def evaluate_signal(symbol, exchange_symbol, candles_5m, candles_15m):
 
     if bullish_trend:
         long_score += 2
-        evidence_long.append("15m EMA trend is bullish")
+        evidence_long.append("15m EMA 9 is above EMA 21")
 
     if bearish_trend:
         short_score += 2
-        evidence_short.append("15m EMA trend is bearish")
+        evidence_short.append("15m EMA 9 is below EMA 21")
 
-    if 50 <= rsi <= 70:
+    if bullish_5m:
         long_score += 1
-        evidence_long.append(
-            f"5m RSI supports bullish momentum ({rsi:.1f})"
-        )
+        evidence_long.append("5m EMA 9 is above EMA 21")
 
-    if 30 <= rsi <= 50:
+    if bearish_5m:
         short_score += 1
-        evidence_short.append(
-            f"5m RSI supports bearish momentum ({rsi:.1f})"
-        )
+        evidence_short.append("5m EMA 9 is below EMA 21")
 
-    if volume_ratio >= VOLUME_RATIO_MIN:
+    if 50 <= rsi <= 68:
         long_score += 1
+        evidence_long.append(f"5m RSI bullish range: {rsi:.1f}")
+
+    if 32 <= rsi <= 50:
         short_score += 1
-        evidence_long.append(
-            f"Volume is {volume_ratio:.2f}x its previous 20-candle average"
-        )
-        evidence_short.append(
-            f"Volume is {volume_ratio:.2f}x its previous 20-candle average"
-        )
+        evidence_short.append(f"5m RSI bearish range: {rsi:.1f}")
+
+    evidence_volume = (
+        f"Closed-candle volume is {volume_ratio:.2f}x "
+        "the previous 20-candle average"
+    )
+
+    long_score += 1
+    short_score += 1
+    evidence_long.append(evidence_volume)
+    evidence_short.append(evidence_volume)
 
     if breakout_up:
         long_score += 2
         evidence_long.append(
-            "Price broke above the previous 20 closed 5m candles"
+            "5m candle closed above the prior 20-candle high"
         )
 
     if breakout_down:
         short_score += 2
         evidence_short.append(
-            "Price broke below the previous 20 closed 5m candles"
+            "5m candle closed below the prior 20-candle low"
         )
 
     if momentum_up:
         long_score += 1
-        evidence_long.append(
-            "Latest closed 5m candle closed above the prior close"
-        )
+        evidence_long.append("Latest closed 5m candle has bullish momentum")
 
     if momentum_down:
         short_score += 1
-        evidence_short.append(
-            "Latest closed 5m candle closed below the prior close"
-        )
+        evidence_short.append("Latest closed 5m candle has bearish momentum")
 
-    candidates = []
-
-    if long_score >= MIN_SCORE and bullish_trend:
+    # Require trend alignment on both timeframes and a breakout.
+    if (
+        bullish_trend
+        and bullish_5m
+        and breakout_up
+        and long_score >= MIN_SCORE
+        and 50 <= rsi <= 68
+    ):
         candidates.append(("LONG", long_score, evidence_long))
 
-    if short_score >= MIN_SCORE and bearish_trend:
+    if (
+        bearish_trend
+        and bearish_5m
+        and breakout_down
+        and short_score >= MIN_SCORE
+        and 32 <= rsi <= 50
+    ):
         candidates.append(("SHORT", short_score, evidence_short))
 
     if not candidates:
@@ -453,63 +588,109 @@ def evaluate_signal(symbol, exchange_symbol, candles_5m, candles_15m):
         key=lambda candidate: candidate[1],
     )
 
-    stop_distance = atr * STOP_ATR_MULTIPLIER
-
-    if direction == "LONG":
-        stop = price - stop_distance
-        risk = price - stop
-        targets = [
-            price + risk,
-            price + risk * 1.8,
-            price + risk * 2.6,
-        ]
-    else:
-        stop = price + stop_distance
-        risk = stop - price
-        targets = [
-            price - risk,
-            price - risk * 1.8,
-            price - risk * 2.6,
-        ]
-
-    if stop <= 0 or any(target <= 0 for target in targets):
+    # Do not issue ambiguous signals if both sides qualify.
+    if len(candidates) > 1:
         return None
 
+    stop_result = calculate_structure(
+        candles_5m,
+        direction,
+        atr,
+        entry,
+    )
+
+    if stop_result is None:
+        return None
+
+    stop, risk, stop_distance_percent = stop_result
+
+    if direction == "LONG":
+        targets = [
+            entry + risk * MIN_TP1_RR,
+            entry + risk * TP2_RR,
+            entry + risk * TP3_RR,
+        ]
+
+        # Reject TP1 if a nearby prior high obstructs the move.
+        resistance = max(candle["high"] for candle in candles_5m[-31:-1])
+
+        if entry < resistance < targets[0]:
+            return None
+
+    else:
+        targets = [
+            entry - risk * MIN_TP1_RR,
+            entry - risk * TP2_RR,
+            entry - risk * TP3_RR,
+        ]
+
+        support = min(candle["low"] for candle in candles_5m[-31:-1])
+
+        if targets[0] < support < entry:
+            return None
+
+    if any(target <= 0 for target in targets):
+        return None
+
+    # Verify price ordering and minimum reward/risk.
+    if direction == "LONG":
+        if not (stop < entry < targets[0] < targets[1] < targets[2]):
+            return None
+    else:
+        if not (targets[2] < targets[1] < targets[0] < entry < stop):
+            return None
+
     leverage, stop_percent, margin_loss_percent = calculate_leverage(
-        price, stop
+        entry, stop
     )
 
     if leverage is None:
         return None
 
+    raw_contract = contract
+    shown_symbol = display_symbol(contract)
+
     signal_id = (
-        f"kraken-linear-{symbol}-{direction}-"
-        f"{candles_5m[-1]['time']}"
+        f"kraken-linear-{raw_contract}-{direction}-"
+        f"{last['time']}"
     )
+
+    # Identify nearby support/resistance for context.
+    support_level = min(candle["low"] for candle in candles_5m[-31:-1])
+    resistance_level = max(candle["high"] for candle in candles_5m[-31:-1])
 
     return {
         "signal_id": signal_id,
         "exchange": "kraken",
-        "exchange_symbol": exchange_symbol,
+        "exchange_symbol": raw_contract,
         "market_type": "futures",
         "market": "FUTURES",
         "category": "linear",
-        "symbol": symbol,
+        "symbol": shown_symbol,
         "direction": direction,
-        "entry": price,
+        "entry": entry,
         "stop_loss": stop,
         "targets": targets,
         "score": score,
         "rsi": round(rsi, 2),
         "atr": atr,
         "volume_ratio": round(volume_ratio, 3),
-        "leverage": leverage,
+        "leverage": FIXED_LEVERAGE,
         "stop_distance_percent": stop_percent,
         "estimated_margin_loss_percent": margin_loss_percent,
+        "risk_reward": {
+            "tp1": MIN_TP1_RR,
+            "tp2": TP2_RR,
+            "tp3": TP3_RR,
+        },
+        "support_reference": support_level,
+        "resistance_reference": resistance_level,
         "timeframe": "5m entry / 15m trend",
-        "candle_time": candles_5m[-1]["time"],
+        "entry_timeframe": "5m",
+        "trend_timeframe": "15m",
+        "candle_time": last["time"],
         "evidence": evidence,
-        "candles": candles_5m[-60:],
+        "candles": candles_5m[-MAX_CANDLE_COUNT:],
         "created_at": now_utc(),
     }
 
@@ -518,48 +699,133 @@ def create_chart(signal):
     os.makedirs(CHART_DIR, exist_ok=True)
 
     candles = signal["candles"]
-    times = list(range(len(candles)))
-    closes = [candle["close"] for candle in candles]
-    highs = [candle["high"] for candle in candles]
-    lows = [candle["low"] for candle in candles]
+    if len(candles) < 10:
+        raise RuntimeError("Not enough candles to draw a chart.")
 
-    fig, ax = plt.subplots(figsize=(12, 7))
+    dates = [
+        datetime.fromtimestamp(candle["time"], tz=timezone.utc)
+        for candle in candles
+    ]
 
-    ax.plot(times, closes, linewidth=1.7, label="Close")
-    ax.fill_between(
-        times, lows, highs, alpha=0.12, label="Candle range"
+    x_values = mdates.date2num(dates)
+
+    candle_width = (5 / (24 * 60)) * 0.68
+
+    fig, (ax, volume_ax) = plt.subplots(
+        2,
+        1,
+        figsize=(15, 9),
+        sharex=True,
+        gridspec_kw={"height_ratios": [4, 1]},
+    )
+
+    for index, candle in enumerate(candles):
+        x = x_values[index]
+        opened = candle["open"]
+        high = candle["high"]
+        low = candle["low"]
+        closed = candle["close"]
+
+        bullish = closed >= opened
+        candle_color = "#00b894" if bullish else "#e74c3c"
+
+        # Real OHLC wick.
+        ax.vlines(
+            x,
+            low,
+            high,
+            color=candle_color,
+            linewidth=1.2,
+            zorder=2,
+        )
+
+        # Real OHLC body.
+        body_bottom = min(opened, closed)
+        body_height = abs(closed - opened)
+
+        # Keep doji candles visible.
+        if body_height == 0:
+            body_height = max(abs(closed) * 0.00002, 1e-12)
+
+        body = patches.Rectangle(
+            (x - candle_width / 2, body_bottom),
+            candle_width,
+            body_height,
+            facecolor=candle_color,
+            edgecolor=candle_color,
+            linewidth=0.8,
+            zorder=3,
+        )
+
+        ax.add_patch(body)
+
+        volume_ax.bar(
+            x,
+            candle["volume"],
+            width=candle_width,
+            color=candle_color,
+            alpha=0.8,
+        )
+
+    entry = signal["entry"]
+    stop = signal["stop_loss"]
+    targets = signal["targets"]
+    direction = signal["direction"]
+
+    ax.axhline(
+        entry,
+        color="#2980b9",
+        linestyle="-",
+        linewidth=1.8,
+        label=f"ENTRY {fmt(entry)}",
     )
 
     ax.axhline(
-        signal["entry"],
+        stop,
+        color="#e74c3c",
         linestyle="--",
-        linewidth=1.5,
-        label="Entry",
-    )
-    ax.axhline(
-        signal["stop_loss"],
-        linestyle="--",
-        linewidth=1.5,
-        label="Stop Loss",
+        linewidth=1.8,
+        label=f"STOP {fmt(stop)}",
     )
 
-    for index, target in enumerate(signal["targets"], start=1):
+    target_colors = ["#27ae60", "#16a085", "#2ecc71"]
+
+    for index, target in enumerate(targets):
         ax.axhline(
             target,
+            color=target_colors[index],
             linestyle=":",
-            linewidth=1.3,
-            label=f"TP{index}",
+            linewidth=1.6,
+            label=f"TP{index + 1} {fmt(target)}",
         )
 
     ax.set_title(
-        f"CRYPTO EDGE | FUTURES | "
-        f"{signal['symbol']} | {signal['direction']} | "
-        f"{signal['leverage']}x"
+        f"CRYPTO EDGE | {signal['symbol']} | {direction} | "
+        f"{FIXED_LEVERAGE:.0f}x | 5m ENTRY / 15m TREND",
+        fontsize=15,
+        fontweight="bold",
+        pad=14,
     )
-    ax.set_xlabel("Closed 5-minute candles")
+
     ax.set_ylabel("Price")
-    ax.grid(True, alpha=0.25)
-    ax.legend(loc="best", fontsize=8)
+    volume_ax.set_ylabel("Volume")
+    volume_ax.set_xlabel("Time (UTC)")
+
+    ax.grid(True, alpha=0.22)
+    volume_ax.grid(True, axis="y", alpha=0.18)
+
+    ax.legend(
+        loc="upper left",
+        fontsize=8,
+        ncol=2,
+        framealpha=0.9,
+    )
+
+    volume_ax.xaxis.set_major_formatter(
+        mdates.DateFormatter("%H:%M", tz=timezone.utc)
+    )
+
+    fig.autofmt_xdate()
     fig.tight_layout()
 
     safe_symbol = (
@@ -567,12 +833,19 @@ def create_chart(signal):
         .replace("/", "_")
         .replace(":", "_")
     )
+
     path = os.path.join(
         CHART_DIR,
         f"{safe_symbol}_{signal['candle_time']}.png",
     )
 
-    fig.savefig(path, dpi=140)
+    fig.savefig(
+        path,
+        dpi=180,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+
     plt.close(fig)
 
     return path
@@ -580,86 +853,87 @@ def create_chart(signal):
 
 def build_caption(signal):
     targets = signal["targets"]
+
     evidence = "\n".join(
         f"• {item}" for item in signal["evidence"]
     )
 
     return (
         "🚨 CRYPTO EDGE | FUTURES SCALP\n\n"
-        f"🪙 Contract: {signal['symbol']}\n"
+        f"🪙 Pair: {signal['symbol']}\n"
         f"📈 Direction: {signal['direction']}\n"
-        f"⏱ Timeframe: {signal['timeframe']}\n\n"
+        f"⏱ Entry: 5m candles | Trend: 15m candles\n\n"
         f"🎯 Reference entry: {fmt(signal['entry'])}\n"
         f"🛑 Stop loss: {fmt(signal['stop_loss'])}\n"
-        f"💰 TP1: {fmt(targets[0])}\n"
-        f"💰 TP2: {fmt(targets[1])}\n"
-        f"💰 TP3: {fmt(targets[2])}\n\n"
-        f"⚙️ Suggested leverage: {signal['leverage']}x "
-        f"(maximum {MAX_LEVERAGE:.0f}x)\n"
+        f"💰 TP1 (1.3R): {fmt(targets[0])}\n"
+        f"💰 TP2 (1.8R): {fmt(targets[1])}\n"
+        f"💰 TP3 (2.5R): {fmt(targets[2])}\n\n"
+        f"⚙️ Fixed suggested leverage: {FIXED_LEVERAGE:.0f}x\n"
         f"📏 Price distance to SL: "
         f"{signal['stop_distance_percent']}%\n"
-        f"🧮 Estimated loss on allocated margin at SL: "
-        f"about {signal['estimated_margin_loss_percent']}%\n"
+        f"🧮 Approx. allocated-margin loss at SL: "
+        f"{signal['estimated_margin_loss_percent']}%\n"
         "Excludes fees, slippage, funding and liquidation effects.\n\n"
         f"📊 Signal score: {signal['score']}\n"
-        f"📉 RSI: {signal['rsi']}\n"
-        f"📦 Volume ratio: {signal['volume_ratio']}x\n\n"
+        f"📉 5m RSI: {signal['rsi']}\n"
+        f"📦 Closed-candle volume ratio: "
+        f"{signal['volume_ratio']}x\n"
+        f"🧱 Support reference: "
+        f"{fmt(signal['support_reference'])}\n"
+        f"🧱 Resistance reference: "
+        f"{fmt(signal['resistance_reference'])}\n\n"
         f"🔎 Evidence:\n{evidence}\n\n"
         "🟡 STATUS: WAITING FOR ENTRY\n"
-        "Reference signal only. Entry is not a confirmed fill.\n"
+        "Entry is a reference price, not a confirmed fill.\n"
         "Paper tracking only. No real order has been placed."
     )
 
 
 def scan_market(instrument):
-    symbol = instrument["symbol"]
-    exchange_symbol = instrument["exchange_symbol"]
+    contract = instrument["contract"]
 
     try:
-        candles_5m = fetch_futures_candles(exchange_symbol, "5m")
+        candles_5m = fetch_futures_candles(contract, "5m")
         time.sleep(0.25)
-        candles_15m = fetch_futures_candles(exchange_symbol, "15m")
+
+        candles_15m = fetch_futures_candles(contract, "15m")
 
         return evaluate_signal(
-            symbol=symbol,
-            exchange_symbol=exchange_symbol,
+            contract=contract,
             candles_5m=candles_5m,
             candles_15m=candles_15m,
         )
 
     except Exception as exc:
-        print(f"Scan failed: FUTURES {symbol}: {exc}")
+        print(f"Scan failed: FUTURES {contract}: {exc}")
         return None
 
 
 def main():
-    print("Starting Crypto Edge Kraken Futures Scalp Engine")
+    print("Starting Crypto Edge Kraken Futures Scalp Engine v4.0")
     print("UTC:", now_utc())
     print("Market mode: FUTURES ONLY")
-    print(
-        f"Suggested leverage: {MIN_LEVERAGE:.0f}x to "
-        f"{MAX_LEVERAGE:.0f}x"
-    )
+    print(f"Fixed suggested leverage: {FIXED_LEVERAGE:.0f}x")
+    print("Entry timeframe: 5m | Trend timeframe: 15m")
+    print("Chart: real OHLC candlesticks + volume")
 
     state = load_state()
+
     sent_ids = set(state.get("sent", []))
     saved_signals = state.get("signals", [])
 
     if not isinstance(saved_signals, list):
         saved_signals = []
 
-    try:
-        universe = fetch_futures_universe()
-        print("Eligible Futures contracts:", len(universe))
-    except Exception as exc:
-        print("Could not load Kraken Futures markets:", exc)
-        raise RuntimeError("Kraken Futures market loading failed.") from exc
+    universe = fetch_futures_universe()
+    print("Eligible Futures contracts:", len(universe))
 
     attempted = 0
     sent_count = 0
 
     for instrument in universe:
         attempted += 1
+
         signal = scan_market(instrument)
 
         if signal is None:
@@ -672,7 +946,6 @@ def main():
         chart_path = create_chart(signal)
         caption = build_caption(signal)
 
-        # Record only after Telegram confirms photo delivery.
         if telegram_send_photo(chart_path, caption):
             sent_ids.add(signal["signal_id"])
 
@@ -686,9 +959,11 @@ def main():
             sent_count += 1
 
             print(
-                f"Signal sent: FUTURES {signal['symbol']} "
-                f"{signal['direction']} score={signal['score']} "
-                f"leverage={signal['leverage']}x"
+                f"Signal sent: {signal['symbol']} "
+                f"{signal['direction']} "
+                f"score={signal['score']} "
+                f"leverage={signal['leverage']}x "
+                f"SL distance={signal['stop_distance_percent']}%"
             )
 
         time.sleep(0.35)
@@ -697,8 +972,9 @@ def main():
             break
 
     state["sent"] = list(sent_ids)[-5000:]
-    state["signals"] = saved_signals[-1000:]
+    state["signals"] = saved_signals[-MAX_STORED_SIGNALS:]
     state["updated_at"] = now_utc()
+
     save_state(state)
 
     print("Markets attempted:", attempted)
