@@ -243,7 +243,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:15:58.920459+00:00",
+      "last_checked_at": "2026-10-16T09:48:29.894714+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -409,7 +409,7 @@
       "entry_confirmed_at": null,
       "confirmed_entry_price": null,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:15:59.230836+00:00",
+      "last_checked_at": "2026-10-16T09:48:30.427702+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -856,7 +856,7 @@
       "entry_confirmed_at": "2026-10-16T05:56:41.376960+00:00",
       "confirmed_entry_price": 5.146e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:15:59.755582+00:00",
+      "last_checked_at": "2026-10-16T09:48:30.949328+00:00",
       "targets_hit": [
         "TP1"
       ],
@@ -1023,7 +1023,7 @@
       "entry_confirmed_at": "2026-10-16T07:43:34.459799+00:00",
       "confirmed_entry_price": 0.08069,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:16:00.491556+00:00",
+      "last_checked_at": "2026-10-16T09:48:31.476589+00:00",
       "targets_hit": [
         "TP1",
         "TP2"
@@ -1138,7 +1138,7 @@
       "entry_confirmed_at": "2026-10-16T08:46:06.515284+00:00",
       "confirmed_entry_price": 1.0524e-07,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:16:01.288899+00:00",
+      "last_checked_at": "2026-10-16T09:48:32.001070+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1181,7 +1181,7 @@
       "entry_confirmed_at": "2026-10-16T09:16:01.661445+00:00",
       "confirmed_entry_price": 5.156e-06,
       "closed_at": null,
-      "last_checked_at": "2026-10-16T09:16:01.661425+00:00",
+      "last_checked_at": "2026-10-16T09:48:32.523065+00:00",
       "targets_hit": [],
       "exits": [],
       "remaining_fraction": 1.0,
@@ -1192,5 +1192,5 @@
       "result": null
     }
   ],
-  "updated_at": "2026-10-16T09:16:02.074885+00:00"
+  "updated_at": "2026-10-16T09:48:32.723216+00:00"
 }
