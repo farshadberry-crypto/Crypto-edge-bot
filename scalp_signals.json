@@ -1,32 +1,32 @@
 {
   "sent": [
+    "kraken-PF_SEIUSD-SHORT-1792177200",
+    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
+    "kraken-linear-PF_BONKUSD-LONG-1792140000",
+    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
+    "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
+    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
+    "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
+    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
     "kraken-linear-PF_MOGUSD-LONG-1792140000",
     "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792136100",
-    "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
-    "kraken-linear-PF_RSRUSD-LONG-1792107000",
     "kraken-linear-PF_PENGUUSD-LONG-1792131300",
     "kraken-linear-PF_DOGEUSD-LONG-1792149000",
-    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
-    "kraken-spot-SUI/USD-LONG-1792103400",
-    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
-    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
-    "kraken-linear-PF_SHIBUSD-LONG-1792129800",
-    "kraken-linear-PF_BONKUSD-LONG-1792140000",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-PF_SEIUSD-SHORT-1792177200",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
     "kraken-linear-PF_SHIBUSD-LONG-1792126200",
-    "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
     "kraken-linear-PF_STRKUSD-SHORT-1792146000",
-    "kraken-linear-PF_PENGUUSD-LONG-1792134000"
+    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800"
   ],
   "signals": [
     {
@@ -940,5 +940,5 @@
       "resolved_at": "2026-10-16T19:33:41.273817+00:00"
     }
   ],
-  "updated_at": "2026-10-17T08:54:24.779714+00:00"
+  "updated_at": "2026-10-17T09:13:25.874144+00:00"
 }
