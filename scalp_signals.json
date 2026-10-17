@@ -1,33 +1,33 @@
 {
   "sent": [
-    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
-    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
-    "kraken-spot-HYPE/USD-LONG-1792103100",
-    "kraken-PF_NEIROUSD-SHORT-1792230900",
-    "kraken-linear-PF_GALAUSD-LONG-1792124400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
-    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
-    "kraken-spot-HYPE/USD-LONG-1792103400",
-    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
-    "kraken-linear-PF_BONKUSD-LONG-1792140000",
-    "kraken-PF_SEIUSD-SHORT-1792177200",
-    "kraken-linear-PF_DOGEUSD-LONG-1792149000",
+    "kraken-spot-SUI/USD-LONG-1792103400",
     "kraken-linear-PF_SHIBUSD-LONG-1792129800",
-    "kraken-linear-PF_PENGUUSD-LONG-1792134000",
-    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
-    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
+    "kraken-PF_SEIUSD-SHORT-1792177200",
+    "kraken-linear-PF_STRKUSD-SHORT-1792122900",
+    "kraken-linear-PF_GALAUSD-SHORT-1792115700",
+    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
+    "kraken-linear-PF_PEPEUSD-LONG-1792129800",
     "kraken-linear-PF_STRKUSD-SHORT-1792136100",
     "kraken-linear-PF_SHIBUSD-LONG-1792126200",
-    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
-    "kraken-linear-PF_MOGUSD-LONG-1792140000",
-    "kraken-spot-SUI/USD-LONG-1792103400",
+    "kraken-linear-PF_SHIBUSD-LONG-1792141800",
     "kraken-linear-PF_PUMPUSD-SHORT-1792145400",
+    "kraken-spot-HYPE/USD-LONG-1792103100",
     "kraken-linear-PF_NEIROUSD-SHORT-1792115700",
     "kraken-linear-PF_RSRUSD-LONG-1792107000",
+    "kraken-linear-PF_BONKUSD-LONG-1792140000",
+    "kraken-linear-PF_DOGEUSD-LONG-1792149000",
+    "kraken-linear-PF_BOMEUSD-LONG-1792104600",
+    "kraken-linear-PF_STRKUSD-SHORT-1792105500",
+    "kraken-linear-PF_PENGUUSD-LONG-1792131300",
+    "kraken-linear-PF_GALAUSD-LONG-1792124400",
+    "kraken-spot-HYPE/USD-LONG-1792103400",
+    "kraken-PF_NEIROUSD-SHORT-1792230900",
+    "kraken-linear-PF_RSRUSD-SHORT-1792113900",
+    "kraken-linear-PF_MOGUSD-LONG-1792140000",
     "kraken-linear-PF_STRKUSD-SHORT-1792146000",
+    "kraken-linear-PF_SHIBUSD-LONG-1792109700",
     "kraken-linear-PF_BOMEUSD-LONG-1792124400",
-    "kraken-linear-PF_STRKUSD-SHORT-1792145400",
-    "kraken-linear-PF_SHIBUSD-LONG-1792109700"
+    "kraken-linear-PF_PENGUUSD-LONG-1792134000"
   ],
   "signals": [
     {
@@ -983,8 +983,13 @@
         "EMA9 retest and directional candle confirmation"
       ],
       "created_at": "2026-10-17T10:04:29.621660+00:00",
-      "outcome": "OPEN"
+      "outcome": "WIN_TP1",
+      "exit_price": 7.571611715584151e-05,
+      "exit_time": 1792235700,
+      "gross_price_return_percent": 1.0117,
+      "estimated_net_price_return_percent": 0.9117,
+      "resolved_at": "2026-10-17T11:34:25.555292+00:00"
     }
   ],
-  "updated_at": "2026-10-17T11:10:08.995053+00:00"
+  "updated_at": "2026-10-17T11:34:38.861885+00:00"
 }
